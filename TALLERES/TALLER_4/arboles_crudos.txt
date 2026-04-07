@@ -1,0 +1,6 @@
+Especie,Latitud,Longitud
+Roble,4.6097,-74.0817
+Pino,4.6XYZ,-74.0900
+Cedro,4.6150,-74.0850
+Eucalipto,NULA,-74.0700
+Nogal,4.6200,-74.0650

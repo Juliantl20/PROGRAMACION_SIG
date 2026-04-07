@@ -1,0 +1,139 @@
+---
+title: "Programación SIG: Taller capitulo 10"
+author: "Julian Andrés Torres Loazano"
+format:
+  html:
+    toc: true
+    toc-location: left
+    toc-depth: 3
+    toc-expand: 2
+    number-sections: true
+    anchor-sections: true
+    code-fold: true
+    smooth-scroll: true
+  pdf: default
+---
+# Capítulo 10: Trabajando con Archivos
+
+## **Ejercicio 1: I/O y Excepciones**
+
+
+```{python}
+
+
+# 1. Crear el archivo crudo
+contenido_crudo = """Especie,Latitud,Longitud
+Roble,4.6097,-74.0817
+Pino,4.6XYZ,-74.0900
+Cedro,4.6150,-74.0850
+Eucalipto,NULA,-74.0700
+Nogal,4.6200,-74.0650"""
+
+archivo_crudo = "arboles_crudos.txt"
+archivo_limpio = "arboles_limpios.csv"
+
+with open(archivo_crudo, "w", encoding="utf-8") as f:
+    f.write(contenido_crudo)
+
+print(f"Archivo '{archivo_crudo}' creado correctamente.")
+
+
+# 2. Función para limpiar el inventario
+def limpiar_inventario(archivo_entrada, archivo_salida):
+    """
+    Lee un archivo de inventario forestal con posibles errores en coordenadas.
+    Si una línea es válida, la escribe en un nuevo archivo limpio.
+    Si falla la conversión a float, omite la línea y muestra una advertencia.
+    """
+    with open(archivo_entrada, "r", encoding="utf-8") as f_in, \
+         open(archivo_salida, "w", encoding="utf-8") as f_out:
+        
+        # Leer encabezado y copiarlo al archivo limpio
+        encabezado = f_in.readline()
+        f_out.write(encabezado)
+
+        # Procesar línea por línea
+        for linea in f_in:
+            partes = linea.strip().split(",")
+
+            especie = partes[0]
+            lat_str = partes[1]
+            lon_str = partes[2]
+
+            try:
+                latitud = float(lat_str)
+                longitud = float(lon_str)
+
+                f_out.write(f"{especie},{latitud},{longitud}\n")
+
+            except ValueError:
+                print(f"Advertencia: la especie '{especie}' tuvo un error en las coordenadas y fue omitida.")
+
+
+# Ejecutar la limpieza
+limpiar_inventario(archivo_crudo, archivo_limpio)
+print(f"Archivo limpio generado: '{archivo_limpio}'")
+```
+
+
+## **Ejercicio 2: Diccionarios y Listas**
+
+
+```{python}
+def cargar_datos_espaciales(nombre_archivo):
+    """
+    Lee un archivo CSV limpio y devuelve una lista de diccionarios
+    con las llaves: especie, latitud y longitud.
+    """
+    datos = []
+
+    with open(nombre_archivo, "r", encoding="utf-8") as f:
+        # Omitir encabezado
+        next(f)
+
+        for linea in f:
+            especie, lat_str, lon_str = linea.strip().split(",")
+
+            registro = {
+                "especie": especie,
+                "latitud": float(lat_str),
+                "longitud": float(lon_str)
+            }
+
+            datos.append(registro)
+
+    return datos
+
+
+# Cargar datos limpios
+arboles = cargar_datos_espaciales(archivo_limpio)
+
+print("\nDatos cargados en memoria:")
+for arbol in arboles:
+    print(arbol)
+
+# Calcular latitud promedio
+suma_latitudes = 0
+
+for arbol in arboles:
+    suma_latitudes += arbol["latitud"]
+
+latitud_promedio = suma_latitudes / len(arboles)
+
+print(f"\nLatitud promedio de los árboles válidos: {latitud_promedio:.4f}")
+```
+
+## Preguntas
+
+**Ejercicio 1 (Manejo de Excepciones): Explica por qué procesar datos espaciales usando bloques try...catch (o except) es una mejor práctica que dejar que el intérprete arroje un error por defecto. ¿Qué pasaría con un archivo de 500,000 registros si el registro número 499,999 tiene un error tipográfico y no usaste manejo de excepciones?**
+
+Usar bloques try-except es mejor práctica porque permite que el programa siga procesando los datos aunque encuentre registros dañados. Si no se maneja la excepción, el intérprete se detiene justo en la línea con error y el procesamiento completo falla. En un archivo de 500.000 registros, si el registro 499.999 tiene un error tipográfico, sin manejo de excepciones se perdería prácticamente todo el trabajo y el script terminaría abruptamente en lugar de omitir solo esa fila que tiene el error. Con manejo de excepciones, el programa podría procesar los primeros 499.998 registros, mostrar una advertencia sobre el error en el registro 499.999, y luego continuar con e siguiente registro.
+
+**Ejercicio 2 Gestión de Recursos (I/O): Compara cómo Python y Julia manejan el cierre automático de archivos (with open(...) as f: vs open(...) do f) frente al enfoque de R (close()). ¿Por qué es un riesgo de seguridad y rendimiento dejar conexiones de archivos abiertas en un flujo de geoprocesamiento continuo?**
+
+En Python, "with open(...) as f:" cierra el archivo automáticamente al salir del bloque. En Julia pasa algo parecido con open(...) do f. En R, normalmente hay que cerrar la conexión manualmente con close(). Dejar archivos abiertos es riesgoso porque consume recursos del sistema, puede bloquear el acceso a otros procesos, generar problemas en la memoria o dejar conexiones colgadas en flujos de trabajo.
+
+**Pregunta General sobre Limpieza de Datos: Explica brevemente cuál es la función de los comandos strip() (o trimws()) y split() al momento de crear bases de datos a partir de archivos de texto plano. ¿Qué errores silenciosos evitan al momento de intentar convertir texto a números decimales?** 
+
+"strip()" sirve para quitar espacios en blanco o saltos de línea que no son visibles inicio y al final del texto. split() sirve para dividir una línea en partes usando un separador, como la coma. Ambos evitan errores silenciosos porque muchas veces un número aparentemente correcto viene acompañado de espacios o caracteres extra, y eso puede hacer fallar la conversión a float o producir malas lecturas. Estas funciones permiten normalizar la información cuando uno maneja volumenes grandes de datos.
+
