@@ -1,0 +1,124 @@
+---
+title: "Programación SIG: Taller capitulo 11"
+author: "Julian Andrés Torres Lozano"
+format:
+  html:
+    toc: true
+    toc-location: left
+    toc-depth: 3
+    toc-expand: 2
+    number-sections: true
+    anchor-sections: true
+    code-fold: true
+    smooth-scroll: true
+  pdf: default
+---
+
+# Capítulo 11. Analítica Espacial: Arreglos y Tablas
+
+# Ejercicio 1. Vectorización y álgebra espacial (Haversine)
+
+En este ejercicio se construyó una función vectorizada llamada `calcular_distancias`, cuyo propósito es calcular la distancia en kilómetros desde Bogotá hacia las demás ciudades del DataFrame. Para ello se reutilizó la lógica de  fórmula de Haversine, pero adaptándola para trabajar directamente sobre columnas completas del DataFrame, evitando ciclos `for`. Esta decisión permite aprovechar la vectorización de NumPy, que es más eficiente cuando se trabaja con varios registros al mismo tiempo.
+
+```{python}
+import numpy as np
+import pandas as pd
+
+# Se crea el DataFrame base con atributos censales y coordenadas geográficas
+df = pd.DataFrame({
+    "Ciudad": ["Bogotá", "Medellín", "Cali", "Barranquilla"],
+    "Region": ["Andina", "Andina", "Pacífica", "Caribe"],
+    "Poblacion": [7181469, 2529403, 2227642, 1206319],
+    "Elevacion": [2640, 1495, 1018, 18],
+    "Latitud": [4.7110, 6.2442, 3.4516, 10.9685],
+    "Longitud": [-74.0721, -75.5812, -76.5320, -74.7813]
+})
+
+def calcular_distancias(df):
+    """
+    Calcula de forma vectorizada la distancia Haversine desde Bogotá
+    hacia todas las ciudades del DataFrame y agrega una nueva columna
+    llamada Distancia_Bogota.
+    """
+    lat_bog = 4.7110
+    lon_bog = -74.0721
+    radio_tierra = 6371.0
+
+    # Se convierten las coordenadas a radianes porque la fórmula trigonométrica lo requiere
+    lat1 = np.radians(lat_bog)
+    lon1 = np.radians(lon_bog)
+    lat2 = np.radians(df["Latitud"])
+    lon2 = np.radians(df["Longitud"])
+    # Se aplica la fórmula de Haversine directamente sobre columnas completas
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    a = (
+        np.sin(dlat / 2) ** 2
+        + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2) ** 2
+    )
+
+    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
+    distancias = radio_tierra * c
+
+    # Se hace una copia para no modificar el DataFrame original de forma accidental
+    df_resultado = df.copy()
+    df_resultado["Distancia_Bogota"] = distancias
+
+    return df_resultado
+
+df_distancias = calcular_distancias(df)
+
+print("Distancia desde Bogotá hacia las demás ciudades:")
+print(df_distancias[["Ciudad", "Distancia_Bogota"]])
+## Ejercicio 2: Limpieza, filtros y agregación tabular
+
+```
+
+
+# Ejercicio 2: Limpieza, filtros y agregación tabular
+
+```{python}
+
+import numpy as np
+import pandas as pd
+
+# Se crea el DataFrame inicial con dos valores faltantes en precipitación
+df_estaciones = pd.DataFrame({
+    "Estacion": ["Páramo", "Valle", "Costa", "Selva", "Sabana"],
+    "Elevacion": [3200, 1500, 15, 200, 2600],
+    "Precipitacion": [850.5, 1200.0, np.nan, 3000.5, np.nan]
+})
+
+print("DataFrame original:")
+print(df_estaciones)
+
+# Se calcula la media ignorando automáticamente los nulos
+# Esta media se usa para imputar porque permite completar la columna
+# sin eliminar estaciones del análisis
+media_precipitacion = df_estaciones["Precipitacion"].mean()
+
+# fillna() se utiliza porque reemplaza únicamente los valores faltantes
+df_estaciones["Precipitacion"] = df_estaciones["Precipitacion"].fillna(media_precipitacion)
+
+print("\nDataFrame con precipitación imputada:")
+print(df_estaciones)
+
+# Se filtran solo las estaciones con elevación estrictamente mayor a 1000 m
+# El filtro booleano permite extraer el subconjunto de interés de manera directa
+estaciones_altas = df_estaciones[df_estaciones["Elevacion"] > 1000].copy()
+
+print("\nEstaciones altas:")
+print(estaciones_altas)
+
+# Se calcula la precipitación promedio únicamente para las estaciones altas
+precipitacion_promedio_altas = estaciones_altas["Precipitacion"].mean()
+
+print(f"\nPrecipitación promedio anual en estaciones altas: {precipitacion_promedio_altas:.2f}")
+
+```
+
+Los resultados muestran que después de sustituir los datos faltantes, fue posible conservar todas las estaciones dentro de la tabla original. Despues de eso, mediante un filtro por elevación, seleccionaron únicamente las estaciones altas y se calculó sobre ellas la precipitación promedio anual. Este tipo de flujo es útil porque combina limpieza de nulos, slicing y agregación tabular en un solo procedimiento.
+
+
+
