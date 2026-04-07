@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Julian Andrés Torres Lozano">
+
+<title>Programación SIG: Taller 3</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="TALLER_3_COMPLETO_files/libs/clipboard/clipboard.min.js"></script>
+<script src="TALLER_3_COMPLETO_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="TALLER_3_COMPLETO_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="TALLER_3_COMPLETO_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="TALLER_3_COMPLETO_files/libs/quarto-html/popper.min.js"></script>
+<script src="TALLER_3_COMPLETO_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="TALLER_3_COMPLETO_files/libs/quarto-html/anchor.min.js"></script>
+<link href="TALLER_3_COMPLETO_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="TALLER_3_COMPLETO_files/libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="TALLER_3_COMPLETO_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="TALLER_3_COMPLETO_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="TALLER_3_COMPLETO_files/libs/bootstrap/bootstrap-9e3ffae467580fdb927a41352e75a2e0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<style>html{ scroll-behavior: smooth; }</style>
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active" data-toc-expanded="2">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#capítulo-8-bucles-y-declaraciones-condicionales" id="toc-capítulo-8-bucles-y-declaraciones-condicionales" class="nav-link active" data-scroll-target="#capítulo-8-bucles-y-declaraciones-condicionales"><span class="header-section-number">1</span> Capítulo 8: Bucles y Declaraciones Condicionales</a>
+  <ul class="collapse">
+  <li><a href="#ejercicio-1-clasificación-iterativa-ciclo-for-e-if-else" id="toc-ejercicio-1-clasificación-iterativa-ciclo-for-e-if-else" class="nav-link" data-scroll-target="#ejercicio-1-clasificación-iterativa-ciclo-for-e-if-else"><span class="header-section-number">1.1</span> <strong>Ejercicio 1: Clasificación iterativa (ciclo for e if-else)</strong></a></li>
+  <li><a href="#código" id="toc-código" class="nav-link" data-scroll-target="#código"><span class="header-section-number">1.2</span> Código</a></li>
+  <li><a href="#ejercicio-2-monitoreo-de-sensores-ciclo-while-y-control-de-flujo" id="toc-ejercicio-2-monitoreo-de-sensores-ciclo-while-y-control-de-flujo" class="nav-link" data-scroll-target="#ejercicio-2-monitoreo-de-sensores-ciclo-while-y-control-de-flujo"><span class="header-section-number">1.3</span> <strong>Ejercicio 2: Monitoreo de sensores (ciclo while y control de flujo)</strong></a></li>
+  <li><a href="#preguntas" id="toc-preguntas" class="nav-link" data-scroll-target="#preguntas"><span class="header-section-number">1.4</span> Preguntas</a></li>
+  </ul></li>
+  <li><a href="#capitulo-9-funciones-y-clases-el-camino-a-la-modularización" id="toc-capitulo-9-funciones-y-clases-el-camino-a-la-modularización" class="nav-link" data-scroll-target="#capitulo-9-funciones-y-clases-el-camino-a-la-modularización"><span class="header-section-number">2</span> Capitulo 9: Funciones y Clases: El camino a la Modularización</a>
+  <ul class="collapse">
+  <li><a href="#ejercicio-1-el-cazador-de-coordenadas-funciones-y-abstracción" id="toc-ejercicio-1-el-cazador-de-coordenadas-funciones-y-abstracción" class="nav-link" data-scroll-target="#ejercicio-1-el-cazador-de-coordenadas-funciones-y-abstracción"><span class="header-section-number">2.1</span> Ejercicio 1: El cazador de coordenadas (Funciones y abstracción)</a></li>
+  <li><a href="#ejercicio-2-modelando-una-ruta-espacial-clases-e-interacción" id="toc-ejercicio-2-modelando-una-ruta-espacial-clases-e-interacción" class="nav-link" data-scroll-target="#ejercicio-2-modelando-una-ruta-espacial-clases-e-interacción"><span class="header-section-number">2.2</span> Ejercicio 2: Modelando una ruta espacial (Clases e interacción)</a></li>
+  <li><a href="#preguntas-1" id="toc-preguntas-1" class="nav-link" data-scroll-target="#preguntas-1"><span class="header-section-number">2.3</span> Preguntas</a></li>
+  </ul></li>
+  </ul>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="TALLER_3_COMPLETO.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Programación SIG: Taller 3</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Julian Andrés Torres Lozano </p>
+          </div>
+  </div>
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="capítulo-8-bucles-y-declaraciones-condicionales" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Capítulo 8: Bucles y Declaraciones Condicionales</h1>
+<section id="ejercicio-1-clasificación-iterativa-ciclo-for-e-if-else" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="ejercicio-1-clasificación-iterativa-ciclo-for-e-if-else"><span class="header-section-number">1.1</span> <strong>Ejercicio 1: Clasificación iterativa (ciclo for e if-else)</strong></h2>
+<p>Estás trabajando en un proyecto de zonificación agrícola en el Eje Cafetero. Tienes una lista de fincas con su respectiva altitud. Sabiendo que el café de especialidad de la región requiere alturas entre los 1700 y los 2200 metros sobre el nivel del mar (msnm), necesitas crear un algoritmo que clasifique automáticamente cada finca.</p>
+</section>
+<section id="código" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="código"><span class="header-section-number">1.2</span> Código</h2>
+<div id="de4b666b" class="cell" data-execution_count="1">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejercicio 1: Clasificación iterativa (ciclo for e if-else)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>altitudes_fincas <span class="op">=</span> [<span class="dv">1350</span>, <span class="dv">1750</span>, <span class="dv">1900</span>, <span class="dv">2300</span>, <span class="dv">1600</span>, <span class="dv">2100</span>]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>conteo_especial <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>conteo_tradicional <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>fincas_especiales <span class="op">=</span> []</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>fincas_tradicionales <span class="op">=</span> []</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> altitud <span class="kw">in</span> altitudes_fincas:</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> altitud <span class="op">&gt;=</span> <span class="dv">1700</span> <span class="kw">and</span> altitud <span class="op">&lt;=</span> <span class="dv">2200</span>:</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        fincas_especiales.append(altitud)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        conteo_especial <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>        fincas_tradicionales.append(altitud)</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>        conteo_tradicional <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"=== Reporte de clasificación de fincas ==="</span>)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Fincas aptas para café de especialidad: </span><span class="sc">{</span>conteo_especial<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Altitudes clasificadas como especiales: </span><span class="sc">{</span>fincas_especiales<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Fincas aptas para café tradicional: </span><span class="sc">{</span>conteo_tradicional<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Altitudes clasificadas como tradicionales: </span><span class="sc">{</span>fincas_tradicionales<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>=== Reporte de clasificación de fincas ===
+Fincas aptas para café de especialidad: 3
+Altitudes clasificadas como especiales: [1750, 1900, 2100]
+Fincas aptas para café tradicional: 3
+Altitudes clasificadas como tradicionales: [1350, 2300, 1600]</code></pre>
+</div>
+</div>
+</section>
+<section id="ejercicio-2-monitoreo-de-sensores-ciclo-while-y-control-de-flujo" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="ejercicio-2-monitoreo-de-sensores-ciclo-while-y-control-de-flujo"><span class="header-section-number">1.3</span> <strong>Ejercicio 2: Monitoreo de sensores (ciclo while y control de flujo)</strong></h2>
+<p>El IDEAM te ha encargado programar el software de una estación hidrológica automatizada en el Río Magdalena. El sensor debe tomar lecturas continuas del nivel del agua. Si el río supera los 8.5 metros, el sistema debe disparar una alerta de inundación y detener las mediciones para proteger el equipo. Si después de cierto número de lecturas todo está normal, el sensor entra en modo de reposo.</p>
+<div id="cb5ad803" class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejercicio 2: Monitoreo de sensores (ciclo while y control de flujo)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>nivel_alerta <span class="op">=</span> <span class="fl">8.5</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>max_lecturas <span class="op">=</span> <span class="dv">12</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>lectura_actual <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>alerta_inundacion <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> lectura_actual <span class="op">&lt;</span> max_lecturas:</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    nivel_rio <span class="op">=</span> random.uniform(<span class="fl">5.0</span>, <span class="fl">9.0</span>)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    lectura_actual <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Lectura </span><span class="sc">{</span>lectura_actual<span class="sc">}</span><span class="ss">: nivel del agua = </span><span class="sc">{</span>nivel_rio<span class="sc">:.2f}</span><span class="ss"> m"</span>)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> nivel_rio <span class="op">&gt;=</span> nivel_alerta:</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        alerta_inundacion <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">"¡ALERTA ROJA! Posible desbordamiento."</span>)</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">break</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> alerta_inundacion <span class="op">==</span> <span class="va">False</span>:</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"Monitoreo finalizado. Niveles estables."</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Lectura 1: nivel del agua = 5.32 m
+Lectura 2: nivel del agua = 6.03 m
+Lectura 3: nivel del agua = 7.43 m
+Lectura 4: nivel del agua = 5.51 m
+Lectura 5: nivel del agua = 8.11 m
+Lectura 6: nivel del agua = 5.30 m
+Lectura 7: nivel del agua = 7.89 m
+Lectura 8: nivel del agua = 7.48 m
+Lectura 9: nivel del agua = 7.19 m
+Lectura 10: nivel del agua = 5.08 m
+Lectura 11: nivel del agua = 6.60 m
+Lectura 12: nivel del agua = 8.88 m
+¡ALERTA ROJA! Posible desbordamiento.</code></pre>
+</div>
+</div>
+</section>
+<section id="preguntas" class="level2" data-number="1.4">
+<h2 data-number="1.4" class="anchored" data-anchor-id="preguntas"><span class="header-section-number">1.4</span> Preguntas</h2>
+<p><strong>Ejercicio 1 (Indentación y Bloques): Si estuvieras desarrollando el código en Python, ¿cómo sabe el computador qué instrucciones pertenecen dentro del ciclo for, cuáles pertenecen al if, y cuáles deben ejecutarse solo al final del programa? ¿Qué diferencia estructural existe frente a cómo lo resolverías en R o Julia?</strong></p>
+<p>En Python, el computador sabe qué instrucciones pertenecen al for, cuáles pertenecen al if y cuáles van fuera de todo por la indentación. Todo lo que está desplazado hacia la derecha bajo un for: se entiende como parte del ciclo, y lo que está aún más adentro bajo un if: pertenece a esa condición. Lo que vuelve al margen izquierdo ya se interpreta como código que va después del bloque. En cambio, en R y Julia esa estructura se delimita con llaves {} o con end, no con espacios. En R se usan llaves para delimitar bloques de código, mientras que en Julia se usa end para cerrar estructuras como loops o condicionales. En ambos casos, la indentación es solo una cuestión de estilo y no afecta la ejecución del programa, a diferencia de Python donde es fundamental.</p>
+<p><strong>Ejercicio 2 (Ciclos Infinitos): En el ciclo while de la simulación del río, ¿qué sucedería exactamente con la memoria y la ejecución del programa si olvidas incluir la instrucción que incrementa la variable lectura_actual en 1? ¿Por qué este riesgo no existe al usar un ciclo for?</strong></p>
+<p>Si en el while olvidas incrementar lectura_actual en 1, la condición lectura_actual &lt; max_lecturas seguiría siendo verdadera indefinidamente y el programa entraría en un ciclo infinito. Eso haría que el script siguiera ejecutándose sin terminar, consumiendo tiempo de procesamiento y recursos del sistema. En un for ese riesgo no existe de la misma manera porque el recorrido ya viene definido por la colección o rango que se va a iterar, y se detiene automáticamente al acabarse los elementos. En un for, el control de la iteración está integrado en la estructura, mientras que en un while depende completamente de que el programador actualice correctamente las variables de control.</p>
+<p><strong>Pregunta General (Operadores Lógicos): Si estás programando en R o Julia, explica detalladamente por qué es peligroso usar el operador doble (&amp;&amp;) cuando intentas filtrar un vector completo de altitudes, y por qué en ese caso específico debes usar el operador sencillo (&amp; o .&amp;).</strong></p>
+<p>En R o Julia no sería recomendable usar &amp;&amp; para filtrar un vector completo porque ese operador está pensado para evaluar una sola condición escalar, no una colección entera de valores. Cuando quieres filtrar muchas altitudes al mismo tiempo necesitas evaluación vectorizada, y por eso se debe usar &amp; en R o .&amp; en Julia. Esos operadores comparan elemento por elemento y devuelven un vector lógico completo, que sí sirve para filtrar correctamente. Si se usa &amp;&amp;, el programa intentará evaluar todo el vector como una sola condición, lo que no tiene sentido y generará un error o un resultado inesperado.</p>
+</section>
+</section>
+<section id="capitulo-9-funciones-y-clases-el-camino-a-la-modularización" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Capitulo 9: Funciones y Clases: El camino a la Modularización</h1>
+<section id="ejercicio-1-el-cazador-de-coordenadas-funciones-y-abstracción" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="ejercicio-1-el-cazador-de-coordenadas-funciones-y-abstracción"><span class="header-section-number">2.1</span> Ejercicio 1: El cazador de coordenadas (Funciones y abstracción)</h2>
+<div id="270dbe01" class="cell" data-execution_count="3">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> calcular_bbox(lista_coordenadas):</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co">    Calcula la caja delimitadora (bounding box) de una lista de coordenadas.</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co">    Parámetros:</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="co">        lista_coordenadas (list): Lista de tuplas con formato (latitud, longitud).</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="co">    Retorna:</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="co">        tuple: (latitud_min, latitud_max, longitud_min, longitud_max)</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    latitudes <span class="op">=</span> []</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    longitudes <span class="op">=</span> []</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> lat, lon <span class="kw">in</span> lista_coordenadas:</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        latitudes.append(lat)</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>        longitudes.append(lon)</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    lat_min <span class="op">=</span> <span class="bu">min</span>(latitudes)</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    lat_max <span class="op">=</span> <span class="bu">max</span>(latitudes)</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    lon_min <span class="op">=</span> <span class="bu">min</span>(longitudes)</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    lon_max <span class="op">=</span> <span class="bu">max</span>(longitudes)</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> lat_min, lat_max, lon_min, lon_max</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejemplo de uso</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>coordenadas <span class="op">=</span> [</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    (<span class="fl">4.6097</span>, <span class="op">-</span><span class="fl">74.0817</span>),   <span class="co"># Bogotá</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    (<span class="fl">6.2442</span>, <span class="op">-</span><span class="fl">75.5812</span>),   <span class="co"># Medellín</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>    (<span class="fl">3.4516</span>, <span class="op">-</span><span class="fl">76.5320</span>),   <span class="co"># Cali</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    (<span class="fl">10.3910</span>, <span class="op">-</span><span class="fl">75.4794</span>)   <span class="co"># Cartagena</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>bbox <span class="op">=</span> calcular_bbox(coordenadas)</span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Bounding Box:"</span>)</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Latitud mínima: </span><span class="sc">{</span>bbox[<span class="dv">0</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Latitud máxima: </span><span class="sc">{</span>bbox[<span class="dv">1</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Longitud mínima: </span><span class="sc">{</span>bbox[<span class="dv">2</span>]<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Longitud máxima: </span><span class="sc">{</span>bbox[<span class="dv">3</span>]<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Bounding Box:
+Latitud mínima: 3.4516
+Latitud máxima: 10.391
+Longitud mínima: -76.532
+Longitud máxima: -74.0817</code></pre>
+</div>
+</div>
+</section>
+<section id="ejercicio-2-modelando-una-ruta-espacial-clases-e-interacción" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="ejercicio-2-modelando-una-ruta-espacial-clases-e-interacción"><span class="header-section-number">2.2</span> Ejercicio 2: Modelando una ruta espacial (Clases e interacción)</h2>
+<div id="4e1dd80c" class="cell" data-execution_count="4">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Función base de distancia</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> haversine(lat1, lon1, lat2, lon2, radio<span class="op">=</span><span class="fl">6371.0</span>):</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    dlat <span class="op">=</span> math.radians(lat2 <span class="op">-</span> lat1)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    dlon <span class="op">=</span> math.radians(lon2 <span class="op">-</span> lon1)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    a <span class="op">=</span> (</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        math.sin(dlat <span class="op">/</span> <span class="dv">2</span>) <span class="op">**</span> <span class="dv">2</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">+</span> math.cos(math.radians(lat1))</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span> math.cos(math.radians(lat2))</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span> math.sin(dlon <span class="op">/</span> <span class="dv">2</span>) <span class="op">**</span> <span class="dv">2</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    c <span class="op">=</span> <span class="dv">2</span> <span class="op">*</span> math.atan2(math.sqrt(a), math.sqrt(<span class="dv">1</span> <span class="op">-</span> a))</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> radio <span class="op">*</span> c</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Clase base del capítulo</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> PuntoEspacial:</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, latitud, longitud, nombre<span class="op">=</span><span class="st">"Punto sin nombre"</span>):</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.latitud <span class="op">=</span> latitud</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.longitud <span class="op">=</span> longitud</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.nombre <span class="op">=</span> nombre</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__str__</span>(<span class="va">self</span>):</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="ss">f"[</span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>nombre<span class="sc">}</span><span class="ss">] (Lat: </span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>latitud<span class="sc">}</span><span class="ss">, Lon: </span><span class="sc">{</span><span class="va">self</span><span class="sc">.</span>longitud<span class="sc">}</span><span class="ss">)"</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> distancia_hacia(<span class="va">self</span>, otro_punto, radio<span class="op">=</span><span class="fl">6371.0</span>):</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> haversine(</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.latitud,</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.longitud,</span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>            otro_punto.latitud,</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>            otro_punto.longitud,</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>            radio</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a><span class="co"># Nueva clase pedida</span></span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RutaGeografica:</span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, nombre):</span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.nombre <span class="op">=</span> nombre</span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.puntos <span class="op">=</span> []</span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> agregar_punto(<span class="va">self</span>, punto):</span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.puntos.append(punto)</span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> medir_distancia_total(<span class="va">self</span>):</span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>        distancia_total <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(<span class="va">self</span>.puntos) <span class="op">-</span> <span class="dv">1</span>):</span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>            distancia_total <span class="op">+=</span> <span class="va">self</span>.puntos[i].distancia_hacia(<span class="va">self</span>.puntos[i <span class="op">+</span> <span class="dv">1</span>])</span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> distancia_total</span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejemplo de uso</span></span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a>p1 <span class="op">=</span> PuntoEspacial(<span class="fl">4.6097</span>, <span class="op">-</span><span class="fl">74.0817</span>, <span class="st">"Bogotá"</span>)</span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a>p2 <span class="op">=</span> PuntoEspacial(<span class="fl">6.2442</span>, <span class="op">-</span><span class="fl">75.5812</span>, <span class="st">"Medellín"</span>)</span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a>p3 <span class="op">=</span> PuntoEspacial(<span class="fl">3.4516</span>, <span class="op">-</span><span class="fl">76.5320</span>, <span class="st">"Cali"</span>)</span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a>ruta <span class="op">=</span> RutaGeografica(<span class="st">"Ruta de los Andes"</span>)</span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a>ruta.agregar_punto(p1)</span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a>ruta.agregar_punto(p2)</span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a>ruta.agregar_punto(p3)</span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Nombre de la ruta: </span><span class="sc">{</span>ruta<span class="sc">.</span>nombre<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Puntos de la ruta:"</span>)</span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> punto <span class="kw">in</span> ruta.puntos:</span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(punto)</span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Distancia total de la ruta: </span><span class="sc">{</span>ruta<span class="sc">.</span>medir_distancia_total()<span class="sc">:.2f}</span><span class="ss"> km"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>Nombre de la ruta: Ruta de los Andes
+Puntos de la ruta:
+[Bogotá] (Lat: 4.6097, Lon: -74.0817)
+[Medellín] (Lat: 6.2442, Lon: -75.5812)
+[Cali] (Lat: 3.4516, Lon: -76.532)
+Distancia total de la ruta: 574.04 km</code></pre>
+</div>
+</div>
+</section>
+<section id="preguntas-1" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="preguntas-1"><span class="header-section-number">2.3</span> Preguntas</h2>
+<p><strong>Ejercicio 1 (Regla DRY y Pureza): Explica con tus propias palabras qué es la regla DRY (Don’t Repeat Yourself). ¿Por qué es un riesgo para la mantenibilidad de un proyecto copiar y pegar la gran fórmula matemática de Haversine en múltiples partes de tu código en lugar de usar la función que creaste?</strong></p>
+<p>La regla DRY significa Don’t Repeat Yourself, es decir, no repetir el mismo código varias veces. La idea es que, si una lógica ya fue escrita una vez en una función, no tiene sentido copiarla y pegarla por todo el proyecto. En el caso de la fórmula de Haversine, repetirla en varias partes sería un riesgo porque, si más adelante hay que corregir algo o mejorarla, tocaría cambiarla manualmente en todos los lugares donde fue copiada. Eso aumenta mucho la probabilidad de cometer errores, dejar versiones diferentes de la misma fórmula y volver el proyecto más difícil de mantener.</p>
+<p><strong>Ejercicio 2 (Paradigmas de POO): Si resolviste (o resolvieras) este ejercicio en Python, ¿dónde “viven” físicamente los métodos analíticos como medir_distancia_total()? Contrasta esta filosofía con el enfoque del Sistema S3 de R. Usa la analogía del “Molde” vs el “Post-it” vista en clase para explicarlo.</strong></p>
+<p>los métodos analíticos como medir_distancia_total() viven dentro de la clase, es decir, dentro del “molde”. Cada objeto creado a partir de ese molde nace con sus datos y con sus métodos listos para usarse. Por eso se dice que en Python los datos y el comportamiento van encapsulados juntos. En cambio, en el sistema S3 de R no existe ese molde rígido; más bien se construye una lista común y luego se le asigna una “etiqueta”, para indicarle a R de qué tipo de objeto se trata. Después, funciones externas leen esa etiqueta y deciden qué método aplicar. Entonces, en Python los métodos viven dentro del molde, mientras que en R las funciones están por fuera y trabajan según la etiqueta del objeto.</p>
+<p><strong>Pregunta general (Eficiencia y Motores): Imagina que tu RutaGeografica tiene 5 millones de puntos recolectados por un GPS y necesitas calcular la distancia total. Si usarás Julia, explica brevemente cómo la combinación del Despacho Múltiple y la Compilación JIT lograría ejecutar este cálculo masivo mucho más rápido que el intérprete estándar de R.</strong></p>
+<p>Si la RutaGeografica tuviera 5 millones de puntos y se usara Julia, el cálculo sería mucho más rápido porque Julia combina Despacho Múltiple con Compilación JIT. El despacho múltiple permite que Julia elija el método exacto según los tipos de datos que recibe, y la compilación JIT hace que, la primera vez que ejecuta esa combinación, traduzca el código a una versión muy optimizada en lenguaje máquina. Después de esa primera compilación, las siguientes iteraciones del cálculo corren a gran velocidad. En cambio, R normalmente interpreta y revisa todo durante la ejecución, lo que genera más sobrecarga cuando hay millones de operaciones repetidas.</p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+<script src="TALLER_3_COMPLETO_files/libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

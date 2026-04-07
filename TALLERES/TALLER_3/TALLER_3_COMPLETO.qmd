@@ -1,0 +1,226 @@
+---
+title: "Programación SIG: Taller 3"
+author: "Julian Andrés Torres Lozano"
+format:
+  html:
+    toc: true
+    toc-location: left
+    toc-depth: 3
+    toc-expand: 2
+    number-sections: true
+    anchor-sections: true
+    code-fold: true
+    smooth-scroll: true
+  pdf: default
+---
+# Capítulo 8: Bucles y Declaraciones Condicionales
+
+## **Ejercicio 1: Clasificación iterativa (ciclo for e if-else)**
+Estás trabajando en un proyecto de zonificación agrícola en el Eje Cafetero. Tienes una lista de fincas con su respectiva altitud. Sabiendo que el café de especialidad de la región requiere alturas entre los 1700 y los 2200 metros sobre el nivel del mar (msnm), necesitas crear un algoritmo que clasifique automáticamente cada finca.
+
+## Código
+
+```{python}
+# Ejercicio 1: Clasificación iterativa (ciclo for e if-else)
+
+altitudes_fincas = [1350, 1750, 1900, 2300, 1600, 2100]
+
+conteo_especial = 0
+conteo_tradicional = 0
+
+fincas_especiales = []
+fincas_tradicionales = []
+
+for altitud in altitudes_fincas:
+    if altitud >= 1700 and altitud <= 2200:
+        fincas_especiales.append(altitud)
+        conteo_especial += 1
+    else:
+        fincas_tradicionales.append(altitud)
+        conteo_tradicional += 1
+
+print("=== Reporte de clasificación de fincas ===")
+print(f"Fincas aptas para café de especialidad: {conteo_especial}")
+print(f"Altitudes clasificadas como especiales: {fincas_especiales}")
+print(f"Fincas aptas para café tradicional: {conteo_tradicional}")
+print(f"Altitudes clasificadas como tradicionales: {fincas_tradicionales}")
+```
+
+
+## **Ejercicio 2: Monitoreo de sensores (ciclo while y control de flujo)**
+El IDEAM te ha encargado programar el software de una estación hidrológica automatizada en el Río Magdalena. El sensor debe tomar lecturas continuas del nivel del agua. Si el río supera los 8.5 metros, el sistema debe disparar una alerta de inundación y detener las mediciones para proteger el equipo. Si después de cierto número de lecturas todo está normal, el sensor entra en modo de reposo.
+
+```{python}
+# Ejercicio 2: Monitoreo de sensores (ciclo while y control de flujo)
+
+import random
+
+nivel_alerta = 8.5
+max_lecturas = 12
+lectura_actual = 0
+alerta_inundacion = False
+
+while lectura_actual < max_lecturas:
+    nivel_rio = random.uniform(5.0, 9.0)
+    lectura_actual += 1
+
+    print(f"Lectura {lectura_actual}: nivel del agua = {nivel_rio:.2f} m")
+
+    if nivel_rio >= nivel_alerta:
+        alerta_inundacion = True
+        print("¡ALERTA ROJA! Posible desbordamiento.")
+        break
+
+if alerta_inundacion == False:
+    print("Monitoreo finalizado. Niveles estables.")
+```
+
+## Preguntas
+
+**Ejercicio 1 (Indentación y Bloques): Si estuvieras desarrollando el código en Python, ¿cómo sabe el computador qué instrucciones pertenecen dentro del ciclo for, cuáles pertenecen al if, y cuáles deben ejecutarse solo al final del programa? ¿Qué diferencia estructural existe frente a cómo lo resolverías en R o Julia?**
+
+En Python, el computador sabe qué instrucciones pertenecen al for, cuáles pertenecen al if y cuáles van fuera de todo por la indentación. Todo lo que está desplazado hacia la derecha bajo un for: se entiende como parte del ciclo, y lo que está aún más adentro bajo un if: pertenece a esa condición. Lo que vuelve al margen izquierdo ya se interpreta como código que va después del bloque. En cambio, en R y Julia esa estructura se delimita con llaves {} o con end, no con espacios. En R se usan llaves para delimitar bloques de código, mientras que en Julia se usa end para cerrar estructuras como loops o condicionales. En ambos casos, la indentación es solo una cuestión de estilo y no afecta la ejecución del programa, a diferencia de Python donde es fundamental.
+
+**Ejercicio 2 (Ciclos Infinitos): En el ciclo while de la simulación del río, ¿qué sucedería exactamente con la memoria y la ejecución del programa si olvidas incluir la instrucción que incrementa la variable lectura_actual en 1? ¿Por qué este riesgo no existe al usar un ciclo for?**
+
+Si en el while olvidas incrementar lectura_actual en 1, la condición lectura_actual < max_lecturas seguiría siendo verdadera indefinidamente y el programa entraría en un ciclo infinito. Eso haría que el script siguiera ejecutándose sin terminar, consumiendo tiempo de procesamiento y recursos del sistema. En un for ese riesgo no existe de la misma manera porque el recorrido ya viene definido por la colección o rango que se va a iterar, y se detiene automáticamente al acabarse los elementos. En un for, el control de la iteración está integrado en la estructura, mientras que en un while depende completamente de que el programador actualice correctamente las variables de control.
+
+**Pregunta General (Operadores Lógicos): Si estás programando en R o Julia, explica detalladamente por qué es peligroso usar el operador doble (&&) cuando intentas filtrar un vector completo de altitudes, y por qué en ese caso específico debes usar el operador sencillo (& o .&).**
+
+En R o Julia no sería recomendable usar && para filtrar un vector completo porque ese operador está pensado para evaluar una sola condición escalar, no una colección entera de valores. Cuando quieres filtrar muchas altitudes al mismo tiempo necesitas evaluación vectorizada, y por eso se debe usar & en R o .& en Julia. Esos operadores comparan elemento por elemento y devuelven un vector lógico completo, que sí sirve para filtrar correctamente. Si se usa &&, el programa intentará evaluar todo el vector como una sola condición, lo que no tiene sentido y generará un error o un resultado inesperado.
+
+# Capitulo 9: Funciones y Clases: El camino a la Modularización
+
+## Ejercicio 1: El cazador de coordenadas (Funciones y abstracción)
+
+```{python}
+def calcular_bbox(lista_coordenadas):
+    """
+    Calcula la caja delimitadora (bounding box) de una lista de coordenadas.
+
+    Parámetros:
+        lista_coordenadas (list): Lista de tuplas con formato (latitud, longitud).
+
+    Retorna:
+        tuple: (latitud_min, latitud_max, longitud_min, longitud_max)
+    """
+    latitudes = []
+    longitudes = []
+
+    for lat, lon in lista_coordenadas:
+        latitudes.append(lat)
+        longitudes.append(lon)
+
+    lat_min = min(latitudes)
+    lat_max = max(latitudes)
+    lon_min = min(longitudes)
+    lon_max = max(longitudes)
+
+    return lat_min, lat_max, lon_min, lon_max
+
+
+# Ejemplo de uso
+coordenadas = [
+    (4.6097, -74.0817),   # Bogotá
+    (6.2442, -75.5812),   # Medellín
+    (3.4516, -76.5320),   # Cali
+    (10.3910, -75.4794)   # Cartagena
+]
+
+bbox = calcular_bbox(coordenadas)
+print("Bounding Box:")
+print(f"Latitud mínima: {bbox[0]}")
+print(f"Latitud máxima: {bbox[1]}")
+print(f"Longitud mínima: {bbox[2]}")
+print(f"Longitud máxima: {bbox[3]}")
+```
+
+## Ejercicio 2: Modelando una ruta espacial (Clases e interacción)
+```{python}
+import math
+
+# Función base de distancia
+def haversine(lat1, lon1, lat2, lon2, radio=6371.0):
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+
+    a = (
+        math.sin(dlat / 2) ** 2
+        + math.cos(math.radians(lat1))
+        * math.cos(math.radians(lat2))
+        * math.sin(dlon / 2) ** 2
+    )
+
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return radio * c
+
+
+# Clase base del capítulo
+class PuntoEspacial:
+    def __init__(self, latitud, longitud, nombre="Punto sin nombre"):
+        self.latitud = latitud
+        self.longitud = longitud
+        self.nombre = nombre
+
+    def __str__(self):
+        return f"[{self.nombre}] (Lat: {self.latitud}, Lon: {self.longitud})"
+
+    def distancia_hacia(self, otro_punto, radio=6371.0):
+        return haversine(
+            self.latitud,
+            self.longitud,
+            otro_punto.latitud,
+            otro_punto.longitud,
+            radio
+        )
+
+
+# Nueva clase pedida
+class RutaGeografica:
+    def __init__(self, nombre):
+        self.nombre = nombre
+        self.puntos = []
+
+    def agregar_punto(self, punto):
+        self.puntos.append(punto)
+
+    def medir_distancia_total(self):
+        distancia_total = 0
+
+        for i in range(len(self.puntos) - 1):
+            distancia_total += self.puntos[i].distancia_hacia(self.puntos[i + 1])
+
+        return distancia_total
+
+
+# Ejemplo de uso
+p1 = PuntoEspacial(4.6097, -74.0817, "Bogotá")
+p2 = PuntoEspacial(6.2442, -75.5812, "Medellín")
+p3 = PuntoEspacial(3.4516, -76.5320, "Cali")
+
+ruta = RutaGeografica("Ruta de los Andes")
+ruta.agregar_punto(p1)
+ruta.agregar_punto(p2)
+ruta.agregar_punto(p3)
+
+print(f"Nombre de la ruta: {ruta.nombre}")
+print("Puntos de la ruta:")
+for punto in ruta.puntos:
+    print(punto)
+
+print(f"Distancia total de la ruta: {ruta.medir_distancia_total():.2f} km")
+```
+
+## Preguntas 
+**Ejercicio 1 (Regla DRY y Pureza): Explica con tus propias palabras qué es la regla DRY (Don’t Repeat Yourself). ¿Por qué es un riesgo para la mantenibilidad de un proyecto copiar y pegar la gran fórmula matemática de Haversine en múltiples partes de tu código en lugar de usar la función que creaste?**
+
+La regla DRY significa Don’t Repeat Yourself, es decir, no repetir el mismo código varias veces. La idea es que, si una lógica ya fue escrita una vez en una función, no tiene sentido copiarla y pegarla por todo el proyecto. En el caso de la fórmula de Haversine, repetirla en varias partes sería un riesgo porque, si más adelante hay que corregir algo o mejorarla, tocaría cambiarla manualmente en todos los lugares donde fue copiada. Eso aumenta mucho la probabilidad de cometer errores, dejar versiones diferentes de la misma fórmula y volver el proyecto más difícil de mantener.
+
+**Ejercicio 2 (Paradigmas de POO): Si resolviste (o resolvieras) este ejercicio en Python, ¿dónde “viven” físicamente los métodos analíticos como medir_distancia_total()? Contrasta esta filosofía con el enfoque del Sistema S3 de R. Usa la analogía del “Molde” vs el “Post-it” vista en clase para explicarlo.**
+
+los métodos analíticos como medir_distancia_total() viven dentro de la clase, es decir, dentro del “molde”. Cada objeto creado a partir de ese molde nace con sus datos y con sus métodos listos para usarse. Por eso se dice que en Python los datos y el comportamiento van encapsulados juntos. En cambio, en el sistema S3 de R no existe ese molde rígido; más bien se construye una lista común y luego se le asigna una "etiqueta", para indicarle a R de qué tipo de objeto se trata. Después, funciones externas leen esa etiqueta y deciden qué método aplicar. Entonces, en Python los métodos viven dentro del molde, mientras que en R las funciones están por fuera y trabajan según la etiqueta del objeto.
+
+**Pregunta general (Eficiencia y Motores): Imagina que tu RutaGeografica tiene 5 millones de puntos recolectados por un GPS y necesitas calcular la distancia total. Si usarás Julia, explica brevemente cómo la combinación del Despacho Múltiple y la Compilación JIT lograría ejecutar este cálculo masivo mucho más rápido que el intérprete estándar de R.**
+
+Si la RutaGeografica tuviera 5 millones de puntos y se usara Julia, el cálculo sería mucho más rápido porque Julia combina Despacho Múltiple con Compilación JIT. El despacho múltiple permite que Julia elija el método exacto según los tipos de datos que recibe, y la compilación JIT hace que, la primera vez que ejecuta esa combinación, traduzca el código a una versión muy optimizada en lenguaje máquina. Después de esa primera compilación, las siguientes iteraciones del cálculo corren a gran velocidad. En cambio, R normalmente interpreta y revisa todo durante la ejecución, lo que genera más sobrecarga cuando hay millones de operaciones repetidas.
+
