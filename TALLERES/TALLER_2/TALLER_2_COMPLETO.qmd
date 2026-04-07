@@ -1,0 +1,265 @@
+---
+title: "Taller 2: Asignación de variables y operaciones básicass - Trabajando con Strings"
+author: "Julian Andrés Torres Lozano"
+format:
+  html:
+    toc: true
+    toc-location: left
+    toc-depth: 3
+    toc-expand: 2
+    number-sections: true
+    anchor-sections: true
+    code-fold: true
+    smooth-scroll: true
+  pdf: default
+---
+# Capítulo 5: Variables y tipos de datos
+
+::: {.panel-tabset}
+
+# Ejercicio 1
+
+## Introducción al código
+
+Este código guarda la información básica de una estación en varias variables. Luego agrupa las coordenadas en una lista y organiza todos los datos en un diccionario. Después extrae la longitud, actualiza la elevación con una nueva medida y finalmente imprime un mensaje con la información actualizada de la estación.
+
+## Código
+
+```{python}
+nombre_estacion = "Páramo de Santurbán"
+latitud = 7.2514
+longitud = -72.9069
+elevacion_metros = 3350
+esta_activa = True
+
+coordenadas = [latitud, longitud]
+
+metadatos_estacion = {
+    "nombre_estacion": nombre_estacion,
+    "latitud": latitud,
+    "longitud": longitud,
+    "elevacion_metros": elevacion_metros,
+    "esta_activa": esta_activa,
+    "coordenadas": coordenadas
+}
+
+longitud_extraida = metadatos_estacion["coordenadas"][1]
+elevacion_metros += 12.5
+
+print(f"La estación {nombre_estacion} se encuentra operativa en la longitud {longitud_extraida} a una altura actualizada de {elevacion_metros} msnm.")
+```
+
+## Preguntas
+
+### ¿Qué índice numérico utilizaste para extraer la longitud de la colección y por qué ese número específicamente?
+
+En el script del Ejercicio 1 utilicé el índice **1** para extraer la longitud. Esto se debe a que en Python las listas usan **indexación base 0**, lo que significa que el primer elemento se ubica en la posición 0, el segundo en la posición 1, y así sucesivamente.
+
+Como la colección de coordenadas fue definida en el siguiente orden: primero la latitud y después la longitud, la latitud quedó almacenada en la posición 0 y la longitud en la posición 1. Por esa razón, para recuperar la longitud desde la colección contenida dentro del diccionario fue necesario utilizar el índice 1. Ese número corresponde específicamente al segundo elemento de la lista, que en este caso era la longitud.
+
+### ¿Qué error arrojaría el lenguaje si usas el índice del lenguaje opuesto (por ejemplo, usar 0 en R o 1 en Python buscando el primer elemento)?
+
+En Python, usar el índice 1 pensando que corresponde al primer elemento no necesariamente genera un error de ejecución, pero sí produce un **error lógico**, porque en lugar de obtener el primer valor se obtiene el segundo. En el contexto del ejercicio, si se hubiera usado 1 buscando el primer dato, se habría extraído la longitud en vez de la latitud.
+
+En Python el error aparece cuando se intenta acceder a una posición que no existe dentro de la lista. En ese caso, el lenguaje arroja un error del tipo `IndexError: list index out of range`.
+
+En R ocurre algo diferente, ya que su indexación es **base 1**. Eso significa que el primer elemento sí se encuentra en la posición 1. Si en R se usa el índice 0 esperando obtener el primer valor, no se obtiene el valor correcto, sino una selección vacía o un resultado no esperado según el contexto.
+
+
+# Ejercicio 2
+
+## Introducción al código
+
+Este código toma un nombre escrito con errores de formato y lo limpia paso a paso. Primero elimina los espacios sobrantes, luego organiza las mayúsculas y minúsculas, y después corrige el uso de la letra `Y` para que el texto quede bien escrito. Al final, muestra en pantalla el antes y el después del registro limpio.
+
+## Código
+
+```{python}
+registro_crudo = "   sAnTuaRio de fAuna Y flora iGuaQue   "
+
+registro_limpio = registro_crudo.strip()
+registro_limpio = registro_limpio.title()
+registro_limpio = registro_limpio.replace(" Y ", " y ")
+
+print(f"Reporte de Limpieza Toponímica:\n\tRegistro Original: \"{registro_crudo}\"\n\tRegistro Limpio: \"{registro_limpio}\"\nEstado: Listo para cruce espacial.")
+```
+
+
+
+### En términos de geoprocesamiento de bases de datos relacionales, ¿por qué es un paso crítico y obligatorio aplicar métodos de limpieza como `.strip()` o `trimws()` antes de realizar uniones de tablas (Joins) basadas en nombres de municipios o regiones?
+
+Debido a que los programas comparan los nombres exactamente como están escritos. Si un municipio o una región tiene espacios de más, letras en mayúsculas o minúsculas diferentes, o pequeños errores de escritura, se podría interpretar como que no es el mismo nombre.
+
+Por ejemplo, aunque para una persona `"Iguaque"` y `" Iguaque "` parezcan iguales, para el programa no lo son. Eso puede hacer que el join no encuentre coincidencias y deje registros sin unir.
+
+Por eso, limpiar el texto antes del cruce ayuda a que los nombres queden estandarizados, evita errores y permite que la unión de tablas salga correctamente.
+
+:::
+
+## Pregunta general
+
+### Explica brevemente la diferencia fundamental entre el uso de triples comillas `"""` en Python versus su uso en Julia.
+
+En Python, las triples comillas se usan para escribir texto en varias líneas y también para agregar descripciones dentro del código, por ejemplo en funciones o módulos.
+
+En Julia, también sirven para escribir texto en varias líneas, pero se usan más directamente para documentar funciones y otras partes del programa. En Julia su uso está más enfocado en la documentación del código.
+
+# Capítulo 6 : Estructuras de datos
+
+::: {.panel-tabset}
+
+## Ejercicio 1. Rutas de monitoreo
+```{python}
+# 1. Definir los puntos como tuplas estáticas
+punto_1 = (11.1198, -74.0321)
+punto_2 = (11.1250, -74.0280)
+punto_3 = (11.1302, -74.0215)
+
+# 2. Crear la ruta inicial como lista mutable
+ruta_avistamiento = [punto_1, punto_2, punto_3]
+
+# 3. Agregar el cuarto punto al final
+punto_4 = (11.1355, -74.0150)
+ruta_avistamiento.append(punto_4)
+
+# 4. Extraer el último punto reportado
+ultimo_reporte = ruta_avistamiento[-1]
+
+# 5. Crear la lista paralela de elevaciones
+elevaciones = [850.5, 920.0, 1050.2, 1180.8]
+
+# 6. Calcular elevación máxima y número total de puntos
+elevacion_maxima = max(elevaciones)
+total_puntos = len(ruta_avistamiento)
+
+# 7. Imprimir resultados
+print("Ruta de avistamiento:", ruta_avistamiento)
+print("Último reporte:", ultimo_reporte)
+print("Elevaciones:", elevaciones)
+print(f"Elevación máxima alcanzada: {elevacion_maxima} m")
+print(f"Número total de puntos visitados: {total_puntos}")
+
+# Ejercicio 2: Metadatos y ecosistemas 
+
+# 1. Crear el diccionario del parque
+pnn_tayrona = {
+    "nombre": "PNN Tayrona",
+    "area_hectareas": 15000,
+    "abierto_turismo": True,
+    "ecosistemas": ["Manglar", "Bosque Seco", "Coral"]
+}
+
+# 2. Acceso seguro a la clave "fecha_creacion"
+fecha_creacion = pnn_tayrona.get("fecha_creacion", "Dato no disponible")
+print("Fecha de creación:", fecha_creacion)
+
+# 3. Añadir nueva clave "departamento"
+pnn_tayrona["departamento"] = "Magdalena"
+
+# 4. Convertir observaciones crudas en conjunto para eliminar duplicados
+observaciones_crudas = ["Manglar", "Coral", "Bosque Seco", "Manglar", "Coral", "Matorral"]
+observaciones_unicas = set(observaciones_crudas)
+
+# 5. Intersección entre ecosistemas oficiales y observaciones únicas
+ecosistemas_oficiales = set(pnn_tayrona["ecosistemas"])
+ecosistemas_avistados = ecosistemas_oficiales.intersection(observaciones_unicas)
+
+# 6. Imprimir resultados
+print("\nDiccionario actualizado del parque:")
+print(pnn_tayrona)
+
+print("\nObservaciones únicas:")
+print(observaciones_unicas)
+
+print("\nEcosistemas oficiales avistados hoy:")
+print(ecosistemas_avistados)
+
+
+```
+
+## Respuestas
+
+**Ejercicio 1:Sobre el Ejercicio 1: En términos de topología espacial y seguridad del código, ¿cuál es la ventaja de guardar las coordenadas individuales (X, Y) como Tuplas inmutables, pero guardar la ruta completa como una Lista mutable? ¿Qué pasaría si intentas modificar directamente la latitud del punto_1 usando punto_1[0] = 12.0000 en Python o Julia?**  
+
+La ventaja de guardar las coordenadas como tuplas es que cada punto queda "protegido" o restringidofrente a cualquier cambio o modificación que pueda hacerse accidentalmente, mientras que la ruta completa sí puede crecer porque está en una lista. Si se intentara hacer `punto_1[0] = 12.0000` en Python, el programa generaría un error porque las tuplas son inmutables. En Julia, también se generaría un error similar, ya que las tuplas no permiten modificar sus elementos después de haber sido creadas.
+
+**Ejercicio 2: En R, existe un debate constante entre usar c() o list(). Si estuvieras programando en R y necesitaras almacenar la lista de "ecosistemas" dentro de las propiedades del parque, ¿qué comando usarías para agrupar esos textos específicos y por qué?**  
+
+En Python el diccionario permite organizar los metadatos del parque mediante claves y valores, lo cual facilita consultar y actualizar la información. Además, los conjuntos ayudan a eliminar duplicados de forma rápida y permiten comparar observaciones usando intersecciones. 
+
+**Pregunta general sobre slicing:Explica brevemente la diferencia crítica en el comportamiento de extracción de rangos (slicing) si ejecutas ruta[1:3] en Python comparado con ejecutar el mismo código en R o Julia. ¿Cuántos elementos te devuelve cada uno y por qué?** 
+
+En Python, `ruta[1:3]` devuelve los elementos de índice 1 y 2, pero no se incluye el 3, porque el límite superior es exclusivo. En R y Julia, una expresión equivalente incluiría ambos extremos del rango, por lo que el comportamiento no es igual.
+
+:::
+
+# Capítulo 7 : Operaciones con Cadenas de Texto (Strings)
+
+## Ejercicio 1. Limpieza de topónimos (PNN Macarena)
+
+```{python}
+
+# Ejercicio 1: Limpieza de topónimos (PNN Macarena)
+
+registro_crudo = "   pnn  seRRania de la mACaRena   "
+
+# Quitar espacios al inicio y al final
+texto_sin_espacios = registro_crudo.strip()
+
+# Convertir a formato título
+texto_titulo = texto_sin_espacios.title()
+
+# Reemplazar Pnn por PNN
+registro_oficial = texto_titulo.replace("Pnn", "PNN")
+
+# Calcular longitud
+longitud_registro = len(registro_oficial)
+
+# Imprimir reporte final
+print(f"El área protegida limpia es: {registro_oficial} y su nombre tiene {longitud_registro} caracteres.")
+
+
+
+# Ejercicio 2: Parseo de coordenadas y WKT (Volcán Galeras)
+
+mensaje_sensor = "ALERTA_SISMICA:1.221,-77.359:PROFUNDIDAD_5KM"
+
+# Separar por :
+partes = mensaje_sensor.split(":")
+bloque_coords = partes[1]
+
+# Separar por coma
+lat_str, lon_str = bloque_coords.split(",")
+
+# Convertir a float
+latitud = float(lat_str)
+longitud = float(lon_str)
+
+# Construir WKT con 4 decimales
+punto_wkt = f"POINT({longitud:.4f} {latitud:.4f})"
+
+# Formatear área con separador de miles
+area_afectada = 1250000
+area_formateada = f"{area_afectada:,}".replace(",", ".")
+
+# Imprimir resultados
+print(f"WKT generado: {punto_wkt}")
+print(f"Área afectada: {area_formateada} m²")
+
+```
+
+## Ejercicio 1: 
+### ¿Por qué es una mala práctica depender únicamente de la función “Reemplazar” (.replace() / gsub()) para quitar espacios accidentales al inicio o final de un texto en bases de datos geográficas grandes, en lugar de usar funciones dedicadas como strip() o trimws()?
+
+Depender solo de replace() para quitar espacios al inicio o al final es una mala práctica porque esa función está pensada para sustituir fragmentos específicos, no para limpiar bordes del texto de forma robusta. En bases grandes, los espacios accidentales pueden variar mucho y strip() es más confiable porque elimina directamente esos espacios sobrantes en los extremos sin depender de que uno escriba exactamente qué patrón reemplazar.
+
+## Ejercicio 2: 
+### En la creación de la geometría WKT, si omitieras el paso de convertir el texto extraído a número decimal (Float) y construyeras el WKT directamente concatenando los textos originales, ¿qué impacto tendría esto al intentar realizar un cálculo de distancia espacial dentro de PostGIS o QGIS posteriormente?
+
+Si no se convirtieran las coordenadas a número decimal y construyo el WKT solo concatenando texto, el dato puede verse correcto visualmente, pero el problema aparece después al momento de usarlo para realizar cálculos cálculos en PostGIS o QGIS se necesita que las coordenadas queden bien interpretadas como valores numéricos; de lo contrario pueden aparecer errores de precisión, problemas de validación o geometrías mal construidas.
+
+## Pregunta general:
+
+### Si decidiste resolver el Ejercicio 2 usando R, explica por qué fue necesario utilizar unlist() o los dobles corchetes [[1]] después de ejecutar la función strsplit. Si usaste Python o Julia, explica cómo se diferencia la salida de la función split en tu lenguaje respecto a R.
+
+En Python, split() devuelve directamente una lista de cadenas, por lo que se puede acceder a cada parte sin pasos adicionales. En cambio, en R strsplit() devuelve una lista, y por eso hace falta usar [[1]] o unlist() para extraer el vector con los valores separados.
