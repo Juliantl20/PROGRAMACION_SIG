@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.8.27">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Julián Andrés Torres Lozano">
+<meta name="dcterms.date" content="2026-04-28">
+
+<title>Adquisición y procesamiento de datos climáticos ERA5-Land para el departamento del Meta</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="T7_C20_JULIAN_TORRES_files/libs/clipboard/clipboard.min.js"></script>
+<script src="T7_C20_JULIAN_TORRES_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="T7_C20_JULIAN_TORRES_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="T7_C20_JULIAN_TORRES_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
+<script src="T7_C20_JULIAN_TORRES_files/libs/quarto-html/popper.min.js"></script>
+<script src="T7_C20_JULIAN_TORRES_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="T7_C20_JULIAN_TORRES_files/libs/quarto-html/anchor.min.js"></script>
+<link href="T7_C20_JULIAN_TORRES_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="T7_C20_JULIAN_TORRES_files/libs/quarto-html/quarto-syntax-highlighting-ed96de9b727972fe78a7b5d16c58bf87.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="T7_C20_JULIAN_TORRES_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="T7_C20_JULIAN_TORRES_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="T7_C20_JULIAN_TORRES_files/libs/bootstrap/bootstrap-9e3ffae467580fdb927a41352e75a2e0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introducción" id="toc-introducción" class="nav-link active" data-scroll-target="#introducción"><span class="header-section-number">1</span> Introducción</a></li>
+  <li><a href="#área-de-estudio-y-datos-utilizados" id="toc-área-de-estudio-y-datos-utilizados" class="nav-link" data-scroll-target="#área-de-estudio-y-datos-utilizados"><span class="header-section-number">2</span> Área de estudio y datos utilizados</a></li>
+  <li><a href="#descarga-mediante-api-de-copernicus-cds" id="toc-descarga-mediante-api-de-copernicus-cds" class="nav-link" data-scroll-target="#descarga-mediante-api-de-copernicus-cds"><span class="header-section-number">3</span> Descarga mediante API de Copernicus CDS</a></li>
+  <li><a href="#lectura-del-archivo-netcdf" id="toc-lectura-del-archivo-netcdf" class="nav-link" data-scroll-target="#lectura-del-archivo-netcdf"><span class="header-section-number">4</span> Lectura del archivo NetCDF</a></li>
+  <li><a href="#auditoría-espacial-y-temporal-del-cubo" id="toc-auditoría-espacial-y-temporal-del-cubo" class="nav-link" data-scroll-target="#auditoría-espacial-y-temporal-del-cubo"><span class="header-section-number">5</span> Auditoría espacial y temporal del cubo</a></li>
+  <li><a href="#álgebra-de-mapas-conversión-de-kelvin-a-celsius" id="toc-álgebra-de-mapas-conversión-de-kelvin-a-celsius" class="nav-link" data-scroll-target="#álgebra-de-mapas-conversión-de-kelvin-a-celsius"><span class="header-section-number">6</span> Álgebra de mapas: conversión de Kelvin a Celsius</a></li>
+  <li><a href="#revisión-de-la-resolución-temporal" id="toc-revisión-de-la-resolución-temporal" class="nav-link" data-scroll-target="#revisión-de-la-resolución-temporal"><span class="header-section-number">7</span> Revisión de la resolución temporal</a></li>
+  <li><a href="#remuestreo-temporal-media-diaria" id="toc-remuestreo-temporal-media-diaria" class="nav-link" data-scroll-target="#remuestreo-temporal-media-diaria"><span class="header-section-number">8</span> Remuestreo temporal: media diaria</a></li>
+  <li><a href="#máxima-mensual-de-la-temperatura-media-diaria" id="toc-máxima-mensual-de-la-temperatura-media-diaria" class="nav-link" data-scroll-target="#máxima-mensual-de-la-temperatura-media-diaria"><span class="header-section-number">9</span> Máxima mensual de la temperatura media diaria</a></li>
+  <li><a href="#fecha-de-ocurrencia-de-la-máxima-mensual" id="toc-fecha-de-ocurrencia-de-la-máxima-mensual" class="nav-link" data-scroll-target="#fecha-de-ocurrencia-de-la-máxima-mensual"><span class="header-section-number">10</span> Fecha de ocurrencia de la máxima mensual</a></li>
+  <li><a href="#construcción-y-exportación-del-netcdf-final" id="toc-construcción-y-exportación-del-netcdf-final" class="nav-link" data-scroll-target="#construcción-y-exportación-del-netcdf-final"><span class="header-section-number">11</span> Construcción y exportación del NetCDF final</a></li>
+  <li><a href="#visualización-de-resultados" id="toc-visualización-de-resultados" class="nav-link" data-scroll-target="#visualización-de-resultados"><span class="header-section-number">12</span> Visualización de resultados</a>
+  <ul class="collapse">
+  <li><a href="#mapa-de-temperatura-máxima-mensual" id="toc-mapa-de-temperatura-máxima-mensual" class="nav-link" data-scroll-target="#mapa-de-temperatura-máxima-mensual"><span class="header-section-number">12.1</span> Mapa de temperatura máxima mensual</a></li>
+  <li><a href="#día-de-ocurrencia-de-la-máxima-mensual" id="toc-día-de-ocurrencia-de-la-máxima-mensual" class="nav-link" data-scroll-target="#día-de-ocurrencia-de-la-máxima-mensual"><span class="header-section-number">12.2</span> Día de ocurrencia de la máxima mensual</a></li>
+  <li><a href="#serie-temporal-en-un-punto-cercano-a-villavicencio" id="toc-serie-temporal-en-un-punto-cercano-a-villavicencio" class="nav-link" data-scroll-target="#serie-temporal-en-un-punto-cercano-a-villavicencio"><span class="header-section-number">12.3</span> Serie temporal en un punto cercano a Villavicencio</a></li>
+  </ul></li>
+  <li><a href="#estadísticas-descriptivas" id="toc-estadísticas-descriptivas" class="nav-link" data-scroll-target="#estadísticas-descriptivas"><span class="header-section-number">13</span> Estadísticas descriptivas</a></li>
+  <li><a href="#preguntas" id="toc-preguntas" class="nav-link" data-scroll-target="#preguntas"><span class="header-section-number">14</span> Preguntas</a>
+  <ul class="collapse">
+  <li><a href="#evaluación-perezosa-y-orden-del-procesamiento" id="toc-evaluación-perezosa-y-orden-del-procesamiento" class="nav-link" data-scroll-target="#evaluación-perezosa-y-orden-del-procesamiento"><span class="header-section-number">14.1</span> Evaluación perezosa y orden del procesamiento</a></li>
+  <li><a href="#convenciones-cf-y-dimensión-temporal" id="toc-convenciones-cf-y-dimensión-temporal" class="nav-link" data-scroll-target="#convenciones-cf-y-dimensión-temporal"><span class="header-section-number">14.2</span> Convenciones CF y dimensión temporal</a></li>
+  </ul></li>
+  </ul>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="T7_C20_JULIAN_TORRES.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li></ul></div></nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Adquisición y procesamiento de datos climáticos ERA5-Land para el departamento del Meta</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Julián Andrés Torres Lozano </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">April 28, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introducción" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> Introducción</h1>
+<p>El presente ejercicio desarrolla un flujo de trabajo para la adquisición y procesamiento de datos climáticos multidimensionales provenientes de Copernicus Climate Data Store. Se trabajó con el conjunto de datos <strong>ERA5-Land hourly data from 1950 to present</strong>, seleccionando la variable <strong>2m temperature</strong> para el departamento del Meta, Colombia, durante enero de 2024.</p>
+<p>El objetivo principal fue descargar un subconjunto climático en formato NetCDF, procesarlo mediante evaluación perezosa (<em>lazy evaluation</em>) y generar un archivo final con dos variables principales: la temperatura máxima mensual calculada a partir de medias diarias y la fecha de ocurrencia de dicha máxima para cada píxel.</p>
+</section>
+<section id="área-de-estudio-y-datos-utilizados" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> Área de estudio y datos utilizados</h1>
+<p>El área de estudio corresponde aproximadamente al departamento del Meta. Para reducir el tamaño del archivo descargado, se utilizó una extracción por subregión mediante un <em>bounding box</em>.</p>
+<p>El orden utilizado por Copernicus para la subregión es:</p>
+<pre class="text"><code>[Norte, Oeste, Sur, Este]</code></pre>
+<p>Para este ejercicio se usó el siguiente recorte espacial:</p>
+<pre class="text"><code>Norte: 5.0
+Oeste: -75.0
+Sur: 1.5
+Este: -68.5</code></pre>
+<p>La variable seleccionada fue:</p>
+<pre class="text"><code>2m temperature</code></pre>
+<p>El periodo seleccionado fue enero de 2024, con todos los días y todas las horas del mes.</p>
+</section>
+<section id="descarga-mediante-api-de-copernicus-cds" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> Descarga mediante API de Copernicus CDS</h1>
+<p>La descarga se realizó utilizando el botón “Show API request code” del portal de Copernicus CDS. El código generado se integró en un script de Python llamado <code>scripts/descargar_era5.py</code>.</p>
+<blockquote class="blockquote">
+<p>Nota: este bloque se deja como evidencia del script de descarga, pero no se ejecuta durante el renderizado del documento para evitar repetir la descarga del archivo.</p>
+</blockquote>
+<div id="24d0e002" class="cell" data-execution_count="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> cdsapi</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>Path(<span class="st">"./data_heavy"</span>).mkdir(exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> <span class="st">"reanalysis-era5-land"</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>request <span class="op">=</span> {</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"variable"</span>: [<span class="st">"2m_temperature"</span>],</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"year"</span>: <span class="st">"2024"</span>,</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"month"</span>: <span class="st">"01"</span>,</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"day"</span>: [</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">"01"</span>, <span class="st">"02"</span>, <span class="st">"03"</span>,</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">"04"</span>, <span class="st">"05"</span>, <span class="st">"06"</span>,</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">"07"</span>, <span class="st">"08"</span>, <span class="st">"09"</span>,</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>        <span class="st">"10"</span>, <span class="st">"11"</span>, <span class="st">"12"</span>,</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>        <span class="st">"13"</span>, <span class="st">"14"</span>, <span class="st">"15"</span>,</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>        <span class="st">"16"</span>, <span class="st">"17"</span>, <span class="st">"18"</span>,</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>        <span class="st">"19"</span>, <span class="st">"20"</span>, <span class="st">"21"</span>,</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>        <span class="st">"22"</span>, <span class="st">"23"</span>, <span class="st">"24"</span>,</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>        <span class="st">"25"</span>, <span class="st">"26"</span>, <span class="st">"27"</span>,</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>        <span class="st">"28"</span>, <span class="st">"29"</span>, <span class="st">"30"</span>,</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>        <span class="st">"31"</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">"time"</span>: [</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>        <span class="st">"00:00"</span>, <span class="st">"01:00"</span>, <span class="st">"02:00"</span>,</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>        <span class="st">"03:00"</span>, <span class="st">"04:00"</span>, <span class="st">"05:00"</span>,</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>        <span class="st">"06:00"</span>, <span class="st">"07:00"</span>, <span class="st">"08:00"</span>,</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>        <span class="st">"09:00"</span>, <span class="st">"10:00"</span>, <span class="st">"11:00"</span>,</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>        <span class="st">"12:00"</span>, <span class="st">"13:00"</span>, <span class="st">"14:00"</span>,</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>        <span class="st">"15:00"</span>, <span class="st">"16:00"</span>, <span class="st">"17:00"</span>,</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>        <span class="st">"18:00"</span>, <span class="st">"19:00"</span>, <span class="st">"20:00"</span>,</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>        <span class="st">"21:00"</span>, <span class="st">"22:00"</span>, <span class="st">"23:00"</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    <span class="st">"data_format"</span>: <span class="st">"netcdf"</span>,</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>    <span class="st">"download_format"</span>: <span class="st">"unarchived"</span>,</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    <span class="st">"area"</span>: [<span class="dv">5</span>, <span class="op">-</span><span class="dv">75</span>, <span class="fl">1.5</span>, <span class="op">-</span><span class="fl">68.5</span>]</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>salida <span class="op">=</span> <span class="st">"./data_heavy/era5_land_meta_t2m_2024_01.nc"</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> cdsapi.Client()</span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>client.retrieve(dataset, request).download(salida)</span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Descarga finalizada: </span><span class="sc">{</span>salida<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="lectura-del-archivo-netcdf" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> Lectura del archivo NetCDF</h1>
+<p>Se cargó el archivo NetCDF descargado desde Copernicus utilizando <code>xarray</code>. Para evitar cargar todo el archivo en memoria RAM desde el inicio, se empleó una estrategia de lectura perezosa mediante <code>chunks</code>.</p>
+<div id="aa36e83e" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> xarray <span class="im">as</span> xr</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> rioxarray</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>archivo_nc <span class="op">=</span> <span class="st">"./data_heavy/era5_land_meta_t2m_2024_01.nc"</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> xr.open_dataset(</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    archivo_nc,</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    chunks<span class="op">=</span><span class="st">"auto"</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"=== DATASET ORIGINAL ==="</span>)</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ds)</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">=== VARIABLES ==="</span>)</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="bu">list</span>(ds.data_vars))</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">=== DIMENSIONES ==="</span>)</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ds.dims)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">=== COORDENADAS ==="</span>)</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ds.coords)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>=== DATASET ORIGINAL ===
+&lt;xarray.Dataset&gt; Size: 7MB
+Dimensions:     (valid_time: 744, latitude: 36, longitude: 66)
+Coordinates:
+  * valid_time  (valid_time) datetime64[ns] 6kB 2024-01-01 ... 2024-01-31T23:...
+    expver      (valid_time) &lt;U4 12kB dask.array&lt;chunksize=(744,), meta=np.ndarray&gt;
+  * latitude    (latitude) float64 288B 5.0 4.9 4.8 4.7 4.6 ... 1.8 1.7 1.6 1.5
+  * longitude   (longitude) float64 528B -75.0 -74.9 -74.8 ... -68.7 -68.6 -68.5
+    number      int64 8B ...
+Data variables:
+    t2m         (valid_time, latitude, longitude) float32 7MB dask.array&lt;chunksize=(744, 36, 66), meta=np.ndarray&gt;
+Attributes:
+    GRIB_centre:             ecmf
+    GRIB_centreDescription:  European Centre for Medium-Range Weather Forecasts
+    GRIB_subCentre:          0
+    Conventions:             CF-1.7
+    institution:             European Centre for Medium-Range Weather Forecasts
+    history:                 2026-04-26T03:22 GRIB to CDM+CF via cfgrib-0.9.1...
+
+=== VARIABLES ===
+['t2m']
+
+=== DIMENSIONES ===
+FrozenMappingWarningOnValuesAccess({'valid_time': 744, 'latitude': 36, 'longitude': 66})
+
+=== COORDENADAS ===
+Coordinates:
+  * valid_time  (valid_time) datetime64[ns] 6kB 2024-01-01 ... 2024-01-31T23:...
+    expver      (valid_time) &lt;U4 12kB dask.array&lt;chunksize=(744,), meta=np.ndarray&gt;
+  * latitude    (latitude) float64 288B 5.0 4.9 4.8 4.7 4.6 ... 1.8 1.7 1.6 1.5
+  * longitude   (longitude) float64 528B -75.0 -74.9 -74.8 ... -68.7 -68.6 -68.5
+    number      int64 8B ...</code></pre>
+</div>
+</div>
+</section>
+<section id="auditoría-espacial-y-temporal-del-cubo" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> Auditoría espacial y temporal del cubo</h1>
+<p>El archivo descargado contiene coordenadas de latitud y longitud, por lo que se asignó el sistema de referencia geográfico <strong>EPSG:4326</strong>. Además, se identificó automáticamente la dimensión temporal del archivo.</p>
+<div id="0b5ec782" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Identificar dimensión temporal</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="st">"valid_time"</span> <span class="kw">in</span> ds.dims:</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    time_dim <span class="op">=</span> <span class="st">"valid_time"</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="cf">elif</span> <span class="st">"time"</span> <span class="kw">in</span> ds.dims:</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    time_dim <span class="op">=</span> <span class="st">"time"</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="cf">else</span>:</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"No se encontró una dimensión temporal llamada valid_time o time."</span>)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Dimensión temporal utilizada:"</span>, time_dim)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Asignar CRS</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> ds.rio.write_crs(<span class="st">"EPSG:4326"</span>)</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Definir dimensiones espaciales</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>ds <span class="op">=</span> ds.rio.set_spatial_dims(</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    x_dim<span class="op">=</span><span class="st">"longitude"</span>,</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    y_dim<span class="op">=</span><span class="st">"latitude"</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"CRS asignado:"</span>)</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ds.rio.crs)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Dimensión temporal utilizada: valid_time
+CRS asignado:
+GEOGCS["WGS 84",DATUM["World Geodetic System 1984",SPHEROID["WGS 84",6378137,298.257223563]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433],AXIS["Latitude",NORTH],AXIS["Longitude",EAST],AUTHORITY["EPSG","4326"]]</code></pre>
+</div>
+</div>
+</section>
+<section id="álgebra-de-mapas-conversión-de-kelvin-a-celsius" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> Álgebra de mapas: conversión de Kelvin a Celsius</h1>
+<p>La variable <code>t2m</code> corresponde a temperatura del aire a 2 metros. En ERA5-Land esta variable se encuentra originalmente en Kelvin, por lo cual se transformó a grados Celsius mediante una operación vectorizada.</p>
+<div id="0b8f008e" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Variable principal</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>t_kelvin <span class="op">=</span> ds[<span class="st">"t2m"</span>]</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Conversión de Kelvin a Celsius</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>t_celsius <span class="op">=</span> t_kelvin <span class="op">-</span> <span class="fl">273.15</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Actualización de metadatos</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>t_celsius.attrs[<span class="st">"units"</span>] <span class="op">=</span> <span class="st">"°C"</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>t_celsius.attrs[<span class="st">"long_name"</span>] <span class="op">=</span> <span class="st">"Temperatura del aire a 2 metros en grados Celsius"</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"=== TEMPERATURA EN CELSIUS ==="</span>)</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(t_celsius)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>=== TEMPERATURA EN CELSIUS ===
+&lt;xarray.DataArray 't2m' (valid_time: 744, latitude: 36, longitude: 66)&gt; Size: 7MB
+dask.array&lt;sub, shape=(744, 36, 66), dtype=float32, chunksize=(744, 36, 66), chunktype=numpy.ndarray&gt;
+Coordinates:
+  * valid_time   (valid_time) datetime64[ns] 6kB 2024-01-01 ... 2024-01-31T23...
+    expver       (valid_time) &lt;U4 12kB dask.array&lt;chunksize=(744,), meta=np.ndarray&gt;
+  * latitude     (latitude) float64 288B 5.0 4.9 4.8 4.7 4.6 ... 1.8 1.7 1.6 1.5
+  * longitude    (longitude) float64 528B -75.0 -74.9 -74.8 ... -68.6 -68.5
+    number       int64 8B ...
+    spatial_ref  int64 8B 0
+Attributes: (12/32)
+    GRIB_paramId:                             167
+    GRIB_dataType:                            fc
+    GRIB_numberOfPoints:                      2376
+    GRIB_typeOfLevel:                         surface
+    GRIB_stepUnits:                           1
+    GRIB_stepType:                            instant
+    ...                                       ...
+    GRIB_totalNumber:                         0
+    GRIB_units:                               K
+    long_name:                                Temperatura del aire a 2 metros...
+    units:                                    °C
+    standard_name:                            unknown
+    GRIB_surface:                             0.0</code></pre>
+</div>
+</div>
+</section>
+<section id="revisión-de-la-resolución-temporal" class="level1" data-number="7">
+<h1 data-number="7"><span class="header-section-number">7</span> Revisión de la resolución temporal</h1>
+<p>Antes de hacer el remuestreo temporal, se verificó la diferencia entre los dos primeros registros de tiempo.</p>
+<div id="21379112" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>delta_t <span class="op">=</span> t_celsius[time_dim].diff(dim<span class="op">=</span>time_dim)[<span class="dv">0</span>].values</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>horas_paso <span class="op">=</span> delta_t <span class="op">/</span> pd.Timedelta(<span class="st">"1 hour"</span>)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Resolución temporal detectada: </span><span class="sc">{</span>horas_paso<span class="sc">}</span><span class="ss"> horas"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Resolución temporal detectada: 1.0 horas</code></pre>
+</div>
+</div>
+</section>
+<section id="remuestreo-temporal-media-diaria" class="level1" data-number="8">
+<h1 data-number="8"><span class="header-section-number">8</span> Remuestreo temporal: media diaria</h1>
+<p>El archivo original tiene resolución horaria. Para reducir la dimensión temporal y generar un producto más útil para análisis territorial, se calculó la temperatura media diaria.</p>
+<div id="26f10a02" class="cell" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>resample_kwargs <span class="op">=</span> {time_dim: <span class="st">"1D"</span>}</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>t_diaria <span class="op">=</span> t_celsius.resample(<span class="op">**</span>resample_kwargs).mean()</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>t_diaria.attrs[<span class="st">"units"</span>] <span class="op">=</span> <span class="st">"°C"</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>t_diaria.attrs[<span class="st">"long_name"</span>] <span class="op">=</span> <span class="st">"Temperatura media diaria a 2 metros"</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"=== TEMPERATURA MEDIA DIARIA ==="</span>)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(t_diaria)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>=== TEMPERATURA MEDIA DIARIA ===
+&lt;xarray.DataArray 't2m' (valid_time: 31, latitude: 36, longitude: 66)&gt; Size: 295kB
+dask.array&lt;stack, shape=(31, 36, 66), dtype=float32, chunksize=(1, 36, 66), chunktype=numpy.ndarray&gt;
+Coordinates:
+  * valid_time   (valid_time) datetime64[ns] 248B 2024-01-01 ... 2024-01-31
+  * latitude     (latitude) float64 288B 5.0 4.9 4.8 4.7 4.6 ... 1.8 1.7 1.6 1.5
+  * longitude    (longitude) float64 528B -75.0 -74.9 -74.8 ... -68.6 -68.5
+    number       int64 8B ...
+    spatial_ref  int64 8B 0
+Attributes: (12/32)
+    GRIB_paramId:                             167
+    GRIB_dataType:                            fc
+    GRIB_numberOfPoints:                      2376
+    GRIB_typeOfLevel:                         surface
+    GRIB_stepUnits:                           1
+    GRIB_stepType:                            instant
+    ...                                       ...
+    GRIB_totalNumber:                         0
+    GRIB_units:                               K
+    long_name:                                Temperatura media diaria a 2 me...
+    units:                                    °C
+    standard_name:                            unknown
+    GRIB_surface:                             0.0</code></pre>
+</div>
+</div>
+</section>
+<section id="máxima-mensual-de-la-temperatura-media-diaria" class="level1" data-number="9">
+<h1 data-number="9"><span class="header-section-number">9</span> Máxima mensual de la temperatura media diaria</h1>
+<p>A partir del cubo diario, se calculó el valor máximo mensual para cada píxel.</p>
+<div id="68459ba4" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>t_max_mensual <span class="op">=</span> t_diaria.<span class="bu">max</span>(dim<span class="op">=</span>time_dim)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Limpiar coordenadas auxiliares y reducir tamaño</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>t_max_mensual <span class="op">=</span> t_max_mensual.reset_coords(drop<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>t_max_mensual <span class="op">=</span> t_max_mensual.astype(<span class="st">"float32"</span>)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>t_max_mensual.attrs[<span class="st">"units"</span>] <span class="op">=</span> <span class="st">"°C"</span></span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>t_max_mensual.attrs[<span class="st">"long_name"</span>] <span class="op">=</span> <span class="st">"Máxima mensual de la temperatura media diaria"</span></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"=== MÁXIMA MENSUAL ==="</span>)</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(t_max_mensual)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>=== MÁXIMA MENSUAL ===
+&lt;xarray.DataArray 't2m' (latitude: 36, longitude: 66)&gt; Size: 10kB
+dask.array&lt;_nanmax_skip-aggregate, shape=(36, 66), dtype=float32, chunksize=(36, 66), chunktype=numpy.ndarray&gt;
+Coordinates:
+  * latitude   (latitude) float64 288B 5.0 4.9 4.8 4.7 4.6 ... 1.8 1.7 1.6 1.5
+  * longitude  (longitude) float64 528B -75.0 -74.9 -74.8 ... -68.7 -68.6 -68.5
+Attributes: (12/32)
+    GRIB_paramId:                             167
+    GRIB_dataType:                            fc
+    GRIB_numberOfPoints:                      2376
+    GRIB_typeOfLevel:                         surface
+    GRIB_stepUnits:                           1
+    GRIB_stepType:                            instant
+    ...                                       ...
+    GRIB_totalNumber:                         0
+    GRIB_units:                               K
+    long_name:                                Máxima mensual de la temperatur...
+    units:                                    °C
+    standard_name:                            unknown
+    GRIB_surface:                             0.0</code></pre>
+</div>
+</div>
+</section>
+<section id="fecha-de-ocurrencia-de-la-máxima-mensual" class="level1" data-number="10">
+<h1 data-number="10"><span class="header-section-number">10</span> Fecha de ocurrencia de la máxima mensual</h1>
+<p>También se calculó la fecha exacta en la que ocurrió la máxima mensual en cada píxel. Para facilitar su almacenamiento en NetCDF, la fecha se codificó como entero en formato <strong>AAAAMMDD</strong>.</p>
+<div id="7be5135f" class="cell" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>fecha_max_mensual <span class="op">=</span> t_diaria.idxmax(dim<span class="op">=</span>time_dim)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Materializar matriz pequeña</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>fecha_max_mensual <span class="op">=</span> fecha_max_mensual.compute()</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Convertir fecha a texto YYYY-MM-DD</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>fechas_str <span class="op">=</span> fecha_max_mensual.values.astype(<span class="st">"datetime64[D]"</span>).astype(<span class="bu">str</span>)</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Convertir de YYYY-MM-DD a entero YYYYMMDD</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>fecha_yyyymmdd <span class="op">=</span> np.char.replace(fechas_str, <span class="st">"-"</span>, <span class="st">""</span>).astype(<span class="st">"int32"</span>)</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>fecha_max_mensual_yyyymmdd <span class="op">=</span> xr.DataArray(</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    fecha_yyyymmdd,</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    coords<span class="op">=</span>{</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">"latitude"</span>: fecha_max_mensual[<span class="st">"latitude"</span>],</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>        <span class="st">"longitude"</span>: fecha_max_mensual[<span class="st">"longitude"</span>]</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>    dims<span class="op">=</span>(<span class="st">"latitude"</span>, <span class="st">"longitude"</span>),</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">"fecha_t2m_max_mensual_yyyymmdd"</span></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>fecha_max_mensual_yyyymmdd.attrs[<span class="st">"long_name"</span>] <span class="op">=</span> <span class="st">"Fecha de ocurrencia de la máxima mensual"</span></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>fecha_max_mensual_yyyymmdd.attrs[<span class="st">"format"</span>] <span class="op">=</span> <span class="st">"AAAAMMDD"</span></span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>fecha_max_mensual_yyyymmdd.attrs[<span class="st">"description"</span>] <span class="op">=</span> <span class="st">"Fecha codificada como entero. Ejemplo: 20240127"</span></span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"=== FECHA DE OCURRENCIA DE LA MÁXIMA ==="</span>)</span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(fecha_max_mensual_yyyymmdd)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>=== FECHA DE OCURRENCIA DE LA MÁXIMA ===
+&lt;xarray.DataArray 'fecha_t2m_max_mensual_yyyymmdd' (latitude: 36, longitude: 66)&gt; Size: 10kB
+array([[20240123, 20240123, 20240125, ..., 20240126, 20240126, 20240126],
+       [20240123, 20240123, 20240124, ..., 20240127, 20240127, 20240127],
+       [20240124, 20240124, 20240123, ..., 20240127, 20240127, 20240127],
+       ...,
+       [20240130, 20240130, 20240130, ..., 20240127, 20240127, 20240127],
+       [20240130, 20240130, 20240130, ..., 20240127, 20240127, 20240127],
+       [20240129, 20240130, 20240130, ..., 20240127, 20240127, 20240127]],
+      shape=(36, 66), dtype=int32)
+Coordinates:
+  * latitude   (latitude) float64 288B 5.0 4.9 4.8 4.7 4.6 ... 1.8 1.7 1.6 1.5
+  * longitude  (longitude) float64 528B -75.0 -74.9 -74.8 ... -68.7 -68.6 -68.5
+Attributes:
+    long_name:    Fecha de ocurrencia de la máxima mensual
+    format:       AAAAMMDD
+    description:  Fecha codificada como entero. Ejemplo: 20240127</code></pre>
+</div>
+</div>
+</section>
+<section id="construcción-y-exportación-del-netcdf-final" class="level1" data-number="11">
+<h1 data-number="11"><span class="header-section-number">11</span> Construcción y exportación del NetCDF final</h1>
+<p>Se construyó un nuevo dataset con dos variables: la máxima mensual en grados Celsius y la fecha de ocurrencia de dicha máxima.</p>
+<div id="9deb923f" class="cell" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>ds_salida <span class="op">=</span> xr.Dataset(</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    {</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">"t2m_max_mensual_celsius"</span>: t_max_mensual,</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">"fecha_t2m_max_mensual_yyyymmdd"</span>: fecha_max_mensual_yyyymmdd</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>ds_salida <span class="op">=</span> ds_salida.rio.write_crs(<span class="st">"EPSG:4326"</span>)</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>ds_salida <span class="op">=</span> ds_salida.rio.set_spatial_dims(</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    x_dim<span class="op">=</span><span class="st">"longitude"</span>,</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    y_dim<span class="op">=</span><span class="st">"latitude"</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"=== DATASET FINAL ==="</span>)</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(ds_salida)</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>salida <span class="op">=</span> Path(<span class="st">"./data_heavy/mi_zona_procesada.nc"</span>)</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> salida.exists():</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>    salida.unlink()</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>ds_salida.to_netcdf(</span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>    salida,</span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>    engine<span class="op">=</span><span class="st">"netcdf4"</span></span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Archivo exportado correctamente: </span><span class="sc">{</span>salida<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>=== DATASET FINAL ===
+&lt;xarray.Dataset&gt; Size: 20kB
+Dimensions:                         (latitude: 36, longitude: 66)
+Coordinates:
+  * latitude                        (latitude) float64 288B 5.0 4.9 ... 1.6 1.5
+  * longitude                       (longitude) float64 528B -75.0 ... -68.5
+    spatial_ref                     int64 8B 0
+Data variables:
+    t2m_max_mensual_celsius         (latitude, longitude) float32 10kB dask.array&lt;chunksize=(36, 66), meta=np.ndarray&gt;
+    fecha_t2m_max_mensual_yyyymmdd  (latitude, longitude) int32 10kB 20240123...
+Archivo exportado correctamente: data_heavy\mi_zona_procesada.nc</code></pre>
+</div>
+</div>
+</section>
+<section id="visualización-de-resultados" class="level1" data-number="12">
+<h1 data-number="12"><span class="header-section-number">12</span> Visualización de resultados</h1>
+<section id="mapa-de-temperatura-máxima-mensual" class="level2" data-number="12.1">
+<h2 data-number="12.1" class="anchored" data-anchor-id="mapa-de-temperatura-máxima-mensual"><span class="header-section-number">12.1</span> Mapa de temperatura máxima mensual</h2>
+<div id="383acc39" class="cell" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>ds_final <span class="op">=</span> xr.open_dataset(<span class="st">"./data_heavy/mi_zona_procesada.nc"</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="dv">6</span>))</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>ds_final[<span class="st">"t2m_max_mensual_celsius"</span>].plot(cmap<span class="op">=</span><span class="st">"inferno"</span>)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Máxima mensual de temperatura media diaria</span><span class="ch">\n</span><span class="st">Departamento del Meta - Enero 2024"</span>)</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Longitud"</span>)</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Latitud"</span>)</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="T7_C20_JULIAN_TORRES_files/figure-html/cell-11-output-1.png" width="832" height="567" class="figure-img"></p>
+<figcaption>Máxima mensual de la temperatura media diaria en el departamento del Meta para enero de 2024.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="día-de-ocurrencia-de-la-máxima-mensual" class="level2" data-number="12.2">
+<h2 data-number="12.2" class="anchored" data-anchor-id="día-de-ocurrencia-de-la-máxima-mensual"><span class="header-section-number">12.2</span> Día de ocurrencia de la máxima mensual</h2>
+<div id="74fb3c5e" class="cell" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>fecha_codificada <span class="op">=</span> ds_final[<span class="st">"fecha_t2m_max_mensual_yyyymmdd"</span>]</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Extraer solo el día del mes</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>dia_maxima <span class="op">=</span> fecha_codificada <span class="op">%</span> <span class="dv">100</span></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>dia_maxima.attrs[<span class="st">"long_name"</span>] <span class="op">=</span> <span class="st">"Día de enero en que ocurrió la máxima mensual"</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="dv">6</span>))</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>dia_maxima.plot(cmap<span class="op">=</span><span class="st">"viridis"</span>)</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Día de ocurrencia de la máxima mensual</span><span class="ch">\n</span><span class="st">Departamento del Meta - Enero 2024"</span>)</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Longitud"</span>)</span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Latitud"</span>)</span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="T7_C20_JULIAN_TORRES_files/figure-html/cell-12-output-1.png" width="820" height="567" class="figure-img"></p>
+<figcaption>Día de enero en que ocurrió la máxima mensual de la temperatura media diaria.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="serie-temporal-en-un-punto-cercano-a-villavicencio" class="level2" data-number="12.3">
+<h2 data-number="12.3" class="anchored" data-anchor-id="serie-temporal-en-un-punto-cercano-a-villavicencio"><span class="header-section-number">12.3</span> Serie temporal en un punto cercano a Villavicencio</h2>
+<div id="c2fde624" class="cell" data-execution_count="12">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>serie_villavicencio <span class="op">=</span> t_diaria.sel(</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    latitude<span class="op">=</span><span class="fl">4.15</span>,</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    longitude<span class="op">=-</span><span class="fl">73.63</span>,</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    method<span class="op">=</span><span class="st">"nearest"</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>plt.figure(figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">4</span>))</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>serie_villavicencio.plot(marker<span class="op">=</span><span class="st">"o"</span>)</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">"Temperatura media diaria cercana a Villavicencio</span><span class="ch">\n</span><span class="st">Enero 2024"</span>)</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">"Temperatura media diaria [°C]"</span>)</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">"Fecha"</span>)</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>plt.grid(<span class="va">True</span>, alpha<span class="op">=</span><span class="fl">0.3</span>)</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="T7_C20_JULIAN_TORRES_files/figure-html/cell-13-output-1.png" width="950" height="375" class="figure-img"></p>
+<figcaption>Temperatura media diaria en un punto cercano a Villavicencio durante enero de 2024.</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="estadísticas-descriptivas" class="level1" data-number="13">
+<h1 data-number="13"><span class="header-section-number">13</span> Estadísticas descriptivas</h1>
+<div id="d62b1f0f" class="cell" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>tmax <span class="op">=</span> ds_final[<span class="st">"t2m_max_mensual_celsius"</span>]</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"=== Estadísticas de la máxima mensual ==="</span>)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Temperatura mínima del mapa:"</span>, <span class="bu">round</span>(<span class="bu">float</span>(tmax.<span class="bu">min</span>().values), <span class="dv">2</span>), <span class="st">"°C"</span>)</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Temperatura máxima del mapa:"</span>, <span class="bu">round</span>(<span class="bu">float</span>(tmax.<span class="bu">max</span>().values), <span class="dv">2</span>), <span class="st">"°C"</span>)</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Temperatura media del mapa:"</span>, <span class="bu">round</span>(<span class="bu">float</span>(tmax.mean().values), <span class="dv">2</span>), <span class="st">"°C"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>=== Estadísticas de la máxima mensual ===
+Temperatura mínima del mapa: 9.98 °C
+Temperatura máxima del mapa: 31.72 °C
+Temperatura media del mapa: 28.19 °C</code></pre>
+</div>
+</div>
+</section>
+<section id="preguntas" class="level1" data-number="14">
+<h1 data-number="14"><span class="header-section-number">14</span> Preguntas</h1>
+<section id="evaluación-perezosa-y-orden-del-procesamiento" class="level2" data-number="14.1">
+<h2 data-number="14.1" class="anchored" data-anchor-id="evaluación-perezosa-y-orden-del-procesamiento"><span class="header-section-number">14.1</span> Evaluación perezosa y orden del procesamiento</h2>
+<p>La evaluación perezosa permite trabajar con archivos multidimensionales sin cargarlos completamente en memoria RAM desde el inicio. En este ejercicio, <code>xarray</code> abrió el archivo NetCDF mediante fragmentos o chunks, de modo que las operaciones se fueron acumulando como instrucciones pendientes y solo se materializaron cuando fue necesario calcular un resultado concreto o exportar el archivo final.</p>
+<p>Si se hubiera reproyectado el cubo horario completo antes de hacer la agregación diaria, el costo computacional habría sido mucho mayor. Esto se debe a que cada hora del mes tendría que pasar por un proceso de interpolación. Para enero de 2024, esto implica 744 capas horarias. En cambio, al calcular primero la media diaria, el cubo se reduce a 31 capas. Por esta razón, el warping o reproyección debe ubicarse hacia el final del flujo de trabajo, después de reducir la dimensión temporal y espacial tanto como sea posible.</p>
+<p>En términos prácticos, reproyectar antes de agregar puede aumentar el consumo de memoria RAM, el tiempo de procesamiento y el tamaño de los archivos intermedios. Por eso, una secuencia más eficiente consiste en leer el archivo de forma perezosa, transformar unidades, hacer agregaciones temporales y solo reproyectar al final si el análisis cartográfico o la integración con otras capas lo exige.</p>
+</section>
+<section id="convenciones-cf-y-dimensión-temporal" class="level2" data-number="14.2">
+<h2 data-number="14.2" class="anchored" data-anchor-id="convenciones-cf-y-dimensión-temporal"><span class="header-section-number">14.2</span> Convenciones CF y dimensión temporal</h2>
+<p>En este ejercicio, el archivo NetCDF fue interpretado correctamente por <code>xarray</code>. La dimensión temporal apareció como <code>valid_time</code> y fue reconocida como un objeto de tipo <code>datetime64[ns]</code>, lo que permitió aplicar directamente operaciones como <code>resample()</code> e <code>idxmax()</code>.</p>
+<p>Esto muestra la utilidad de las convenciones CF en archivos NetCDF climáticos. Gracias a los metadatos del archivo, el software pudo reconocer que el eje temporal no era una simple serie de números, sino una secuencia de fechas reales. En este caso no fue necesario reconstruir manualmente las fechas, aunque sí fue necesario identificar que el nombre de la dimensión temporal era <code>valid_time</code> y no simplemente <code>time</code>.</p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
