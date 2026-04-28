@@ -1,0 +1,285 @@
+---
+title: "Taller 7 Capitulo 21:Vectores, DataFrames y Comparación entre Lenguajes"
+subtitle: "Programacion SIG"
+author: "Julián Andrés Torres Lozano"
+date: today
+lang: es
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    theme: cosmo
+    number-sections: true
+  pdf:
+    toc: true
+    number-sections: true
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+# Ejercicio 1: Hidrología del Río Magdalena
+
+## Contexto
+
+Se analiza el comportamiento de cinco estaciones hidrológicas del IDEAM ubicadas a lo largo del río Magdalena. Para cada estación se cuenta con el caudal medio mensual expresado en metros cúbicos por segundo, es decir, en m³/s.
+
+Las estaciones consideradas son:
+
+- Honda
+- Puerto Berrío
+- Barrancabermeja
+- Puerto Wilches
+- Calamar
+
+El objetivo es calcular estadísticos básicos y transformar los caudales de m³/s a litros por segundo, l/s, usando una operación vectorizada.
+
+## Desarrollo en R
+
+```{r}
+# ============================================================
+# EJERCICIO 1: HIDROLOGÍA DEL RÍO MAGDALENA
+# ============================================================
+
+# Definir una colección ordenada con los nombres de las estaciones
+estaciones <- c(
+  "Honda",
+  "Puerto Berrío",
+  "Barrancabermeja",
+  "Puerto Wilches",
+  "Calamar"
+)
+
+# Definir una colección paralela con los caudales en m3/s
+caudales_m3s <- c(1500, 2100, 2800, 3200, 4500)
+
+# Calcular el caudal máximo registrado
+caudal_maximo <- max(caudales_m3s)
+
+# Calcular el caudal promedio de las cinco estaciones
+caudal_promedio <- mean(caudales_m3s)
+
+# Convertir los caudales de m3/s a litros por segundo
+# 1 m3 = 1000 litros
+# Esta operación se realiza de forma vectorizada, sin usar bucles for.
+caudales_ls <- caudales_m3s * 1000
+
+# Imprimir resultados
+estaciones
+caudales_m3s
+caudal_maximo
+caudal_promedio
+caudales_ls
+```
+
+## Resultados del ejercicio 1
+
+```{r}
+# Presentar los resultados en una tabla
+df_caudales <- data.frame(
+  estacion = estaciones,
+  caudal_m3s = caudales_m3s,
+  caudal_ls = caudales_ls
+)
+
+df_caudales
+```
+
+El caudal máximo registrado es de `r caudal_maximo` m³/s. El caudal promedio de las cinco estaciones analizadas es de `r caudal_promedio` m³/s.
+
+La transformación de m³/s a l/s se hizo multiplicando el vector `caudales_m3s` por 1000. En R, esta operación se aplica automáticamente a cada elemento del vector, por lo cual no fue necesario usar un ciclo `for`.
+
+# Ejercicio 2: Calidad del Aire en Bogotá
+
+
+La Red de Monitoreo de Calidad del Aire de Bogotá reporta valores promedio diarios de material particulado fino PM2.5. Para este ejercicio, se organiza la información en un `data.frame`, se identifican las estaciones que superan el límite diario recomendado y se genera una visualización simple mediante un gráfico de barras.
+
+El límite diario recomendado usado en el ejercicio es de 15. Se consideran en alerta las estaciones con valores estrictamente mayores a 15.
+
+## Creación del DataFrame
+
+```{r}
+# ============================================================
+# EJERCICIO 2: CALIDAD DEL AIRE EN BOGOTÁ
+# ============================================================
+
+# Crear el DataFrame con estaciones y valores de PM2.5
+df_aire <- data.frame(
+  estacion = c("Carvajal", "Kennedy", "Fontibón", "Suba", "Usaquén"),
+  pm25 = c(55, 42, 38, 15, 12)
+)
+
+# Imprimir el DataFrame original
+df_aire
+```
+
+## Resumen descriptivo del DataFrame
+
+```{r}
+# Estructura técnica del DataFrame
+str(df_aire)
+
+# Resumen descriptivo del DataFrame
+summary(df_aire)
+```
+
+## Filtrado de estaciones en alerta
+
+```{r}
+# Filtrar estaciones donde el nivel de PM2.5 sea estrictamente mayor a 15
+df_alerta <- df_aire[df_aire$pm25 > 15, ]
+
+# Crear una nueva columna llamada estado
+df_alerta$estado <- "Crítico"
+
+# Imprimir el DataFrame filtrado
+df_alerta
+```
+
+## Visualización de los niveles de PM2.5
+
+```{r}
+# Crear carpeta de salidas si no existe
+dir.create("salidas", showWarnings = FALSE)
+
+# Guardar el gráfico como imagen PNG
+png(
+  filename = "salidas/T7_C21_grafico_pm25_bogota.png",
+  width = 900,
+  height = 600
+)
+
+barplot(
+  height = df_aire$pm25,
+  names.arg = df_aire$estacion,
+  las = 2,
+  col = "gray70",
+  main = "Niveles diarios de PM2.5 en estaciones de Bogotá",
+  xlab = "Estación",
+  ylab = "PM2.5"
+)
+
+# Línea de referencia del límite usado en el ejercicio
+abline(h = 15, lty = 2, lwd = 2)
+
+text(
+  x = 4.5,
+  y = 17,
+  labels = "Límite = 15",
+  cex = 0.8
+)
+
+dev.off()
+
+# Mostrar el gráfico en el documento
+barplot(
+  height = df_aire$pm25,
+  names.arg = df_aire$estacion,
+  las = 2,
+  col = "gray70",
+  main = "Niveles diarios de PM2.5 en estaciones de Bogotá",
+  xlab = "Estación",
+  ylab = "PM2.5"
+)
+
+abline(h = 15, lty = 2, lwd = 2)
+
+text(
+  x = 4.5,
+  y = 17,
+  labels = "Límite = 15",
+  cex = 0.8
+)
+```
+
+
+
+El DataFrame `df_alerta` contiene únicamente las estaciones con valores de PM2.5 estrictamente mayores a 15. Por esta razón, la estación Suba, que tiene un valor igual a 15, no queda incluida dentro de la alerta. Las estaciones clasificadas como críticas son Carvajal, Kennedy y Fontibón.
+
+El gráfico de barras permite comparar visualmente los niveles de PM2.5 entre estaciones. Se observa que tres estaciones superan el límite usado como referencia en el ejercicio, mientras que Suba se ubica exactamente en el límite y Usaquén se encuentra por debajo.
+
+# Preguntas analíticas
+
+## Pregunta Ejercicio 1: Vectorización
+
+Si el Ejercicio 1 se desarrollara en Python y se creara `caudales_m3s` como una lista nativa, por ejemplo:
+
+```python
+caudales_m3s = [1500, 2100, 2800, 3200, 4500]
+caudales_m3s * 1000
+```
+
+la operación no realizaría la multiplicación  elemento por elemento. En Python, cuando una lista nativa se multiplica por un número entero, la lista se repite esa cantidad de veces. Es decir, el resultado sería una lista mucho más larga con los mismos valores repetidos, no la conversión de m³/s a l/s.
+
+Por ejemplo, una versión reducida de ese comportamiento sería:
+
+```python
+[1500, 2100] * 3
+```
+
+El resultado sería:
+
+```python
+[1500, 2100, 1500, 2100, 1500, 2100]
+```
+
+Esto demuestra que las listas nativas de Python no se comportan como vectores  para este tipo de operación.
+
+La librería de Python que soluciona este problema es NumPy. Al convertir la lista en un arreglo numérico de NumPy, la multiplicación sí se aplica elemento por elemento:
+
+```python
+import numpy as np
+
+caudales_m3s = np.array([1500, 2100, 2800, 3200, 4500])
+caudales_ls = caudales_m3s * 1000
+```
+
+En ese caso, el resultado sería:
+
+```python
+array([1500000, 2100000, 2800000, 3200000, 4500000])
+```
+
+La diferencia con R, es que R trabaja de forma natural con vectores numéricos. Por eso, en R la operación:
+
+```{r}
+caudales_m3s * 1000
+```
+
+multiplica automáticamente cada elemento del vector por 1000.
+
+En Julia también puede realizarse una operación elemento a elemento, aunque suele expresarse de forma explícita mediante el operador punto:
+
+```julia
+caudales_ls = caudales_m3s .* 1000
+```
+
+En conclusión, Python con listas nativas no realiza la operación matemática deseada, sino una repetición de la lista. Para obtener un comportamiento vectorizado se debe usar una estructura especializada como un arreglo de NumPy. En cambio, R permite la vectorización directamente sobre sus vectores numéricos.
+
+## Pregunta General 2: Indexación
+
+En el lenguaje elegido para este trabajo, R, la línea exacta para extraer las tres primeras estaciones del DataFrame del Ejercicio 2 usando indexación por rangos es:
+
+```{r}
+df_aire[1:3, ]
+```
+
+Esta instrucción selecciona las filas 1, 2 y 3 del DataFrame `df_aire`, conservando todas las columnas. El resultado es:
+
+```{r}
+df_aire[1:3, ]
+```
+
+R utiliza **indexación Base-1**, lo que significa que la primera posición de una colección se identifica con el número 1. Además, en R una secuencia como `1:3` incluye tanto el límite inferior como el límite superior. Por esa razón, `df_aire[1:3, ]` devuelve exactamente las tres primeras estaciones: Carvajal, Kennedy y Fontibón.
+
+En contraste, Python utiliza **indexación Base-0** y el límite superior del rango se excluye. En pandas, una instrucción equivalente sería:
+
+```python
+df_aire.iloc[0:3]
+```
+
+Aunque se escribe `0:3`, Python devuelve las posiciones 0, 1 y 2, pero excluye la posición 3. Por tanto, mientras R incluye el límite superior en una expresión como `1:3`, Python excluye el límite superior en una expresión como `0:3`.
+
+
+
