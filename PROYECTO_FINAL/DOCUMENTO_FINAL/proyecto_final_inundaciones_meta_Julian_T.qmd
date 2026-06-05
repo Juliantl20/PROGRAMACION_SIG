@@ -1,0 +1,1160 @@
+---
+title: "Análisis multitemporal de frecuencia de inundaciones en el departamento del Meta mediante Google Earth Engine"
+subtitle: "Proyecto final — Programación en SIG, Maestría en Geomática"
+author: "Julián Andrés Torres Lozano"
+date: 04-06-2026
+lang: es
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: true
+    theme: cosmo
+  pdf:
+    toc: true
+    number-sections: true
+    geometry:
+      - margin=2.5cm
+execute:
+  echo: true
+  warning: false
+  message: false
+  eval: false
+knitr:
+  opts_chunk:
+    python.reticulate: false
+---
+
+# Título del proyecto
+
+**Análisis multitemporal de frecuencia de inundaciones en el departamento del Meta mediante Google Earth Engine, Sentinel-1 y geocomputación reproducible**
+
+# Introducción y justificación
+
+Las inundaciones son uno de los fenómenos hidrometeorológicos que más afectan la relación entre la sociedad y el territorio. No solo generan daños sobre viviendas, vías, cultivos e infraestructura, sino que también alteran dinámicas económicas locales y ecosistemas asociados a ríos, caños y planicies aluviales. En los últimos años, diferentes estudios basados en imágenes satelitales han mostrado que la exposición de la población a inundaciones ha aumentado, lo que refuerza la necesidad de contar con herramientas espaciales que permitan observar estos procesos de manera sistemática (Tellman et al., 2021). En Colombia, este tipo de eventos también se relaciona con periodos de alta variabilidad climática y con condiciones territoriales que incrementan la vulnerabilidad de las comunidades (Ávila Díaz et al., 2013).
+
+En la Orinoquía colombiana, la presencia de extensas planicies, la influencia de grandes sistemas hídricos y la variación estacional de las lluvias hacen que algunas zonas presenten condiciones recurrentes de anegamiento o inundación temporal. Por eso, más que observar un evento aislado, este trabajo busca revisar cómo se repite espacialmente la señal de inundación a lo largo de varios años.
+
+Para abordar este problema se utilizan imágenes de radar de apertura sintética Sentinel-1. Este tipo de sensor tiene una ventaja importante frente a las imágenes ópticas: puede adquirir información incluso con nubosidad y sin depender de la iluminación solar. Esto resulta clave en zonas tropicales, donde los periodos de lluvia suelen coincidir con alta cobertura de nubes. En términos físicos, las superficies de agua abierta tienden a presentar valores bajos de retrodispersión SAR, lo que permite diferenciarlas de otras coberturas bajo ciertos criterios de procesamiento (Twele et al., 2016; Amitrano et al., 2018; Cao et al., 2019).
+
+El uso de Google Earth Engine permite trabajar con colecciones satelitales de gran volumen sin tener que descargarlas completamente al equipo local. Esta característica facilita el análisis multitemporal en áreas regionales como el departamento del Meta y se ajusta al enfoque de ciencia abierta planteado para el proyecto final (Gorelick et al., 2017).
+
+# Estado del arte / revisión bibliográfica preliminar
+
+El mapeo de inundaciones con sensores remotos se ha convertido en una herramienta frecuente para estudiar eventos hidrológicos en grandes áreas. Tradicionalmente, muchos trabajos han utilizado imágenes ópticas e índices espectrales de agua, como NDWI o MNDWI. Sin embargo, en regiones tropicales estas fuentes pueden estar muy limitadas por nubes, sombras y condiciones atmosféricas. Por esta razón, las imágenes SAR han tomado un papel importante: aunque su interpretación requiere más cuidado, permiten observar la superficie terrestre en condiciones donde los sensores ópticos no siempre son útiles.
+
+## Google Earth Engine y procesamiento multitemporal
+
+Google Earth Engine (GEE) es una plataforma de análisis geoespacial en la nube que integra catálogo de datos, almacenamiento y capacidad de procesamiento. Gorelick et al. (2017) la presentan como una herramienta de escala planetaria para trabajar con grandes volúmenes de información satelital. En este proyecto, esa capacidad se aprovecha para consultar y procesar directamente las colecciones `COPERNICUS/S1_GRD`, `JRC/GSW1_4/GlobalSurfaceWater` y `USGS/SRTMGL1_003`.
+
+El trabajo con Sentinel-1 dentro de GEE también se apoya en desarrollos orientados a preparar datos SAR listos para análisis. Mullissa et al. (2021) explican la importancia de reducir ruido, controlar el speckle, normalizar la señal y trabajar con series más estables. Aunque este proyecto no implementa una cadena ARD completa, sí incorpora decisiones prácticas en esa misma línea, como el uso de composiciones mensuales y el suavizado espacial mediante `focal_mean`.
+
+## Sentinel-1 SAR para detección de inundaciones
+
+Las imágenes SAR registran la energía que retorna al sensor después de interactuar con la superficie. En cuerpos de agua relativamente lisos, la señal se refleja de forma especular y retorna poca energía al radar; por eso, el agua suele aparecer con valores bajos de retrodispersión. Esta propiedad ha sido utilizada en diferentes metodologías de mapeo de inundaciones con Sentinel-1.
+
+Twele et al. (2016) proponen una cadena automatizada para mapeo de inundaciones con Sentinel-1, mientras que Amitrano et al. (2018) desarrollan un enfoque no supervisado para mapeo rápido con productos GRD. Estos trabajos muestran que Sentinel-1 puede ser útil tanto para respuestas rápidas como para análisis multitemporales. En este proyecto se trabaja principalmente con la polarización VV, ya que varios estudios reportan su utilidad para detectar agua abierta mediante umbralización (Amitrano et al., 2018; Cao et al., 2019).
+
+Aun así, la interpretación de la señal SAR no es directa en todos los casos. La vegetación inundada, la humedad del suelo, la rugosidad del agua, las sombras radar y la geometría de adquisición pueden generar errores. Por eso, los resultados de este trabajo se presentan como **posibles áreas inundadas** o zonas con condiciones compatibles con inundación, y no como una delimitación oficial.
+
+## Umbrales, composición mensual y limpieza espacial
+
+El flujo de trabajo usa un umbral aproximado de -18 dB en VV para identificar píxeles con baja retrodispersión. Este valor se encuentra dentro de rangos reportados para detección de agua e inundaciones con SAR, aunque siempre debe entenderse como un parámetro ajustable según las condiciones locales (Twele et al., 2016; Cao et al., 2019; Manjusree et al., 2012).
+
+Para resumir la información mensual se utiliza el percentil 10. Esta decisión busca capturar valores bajos de retrodispersión que pueden estar asociados con agua temporal dentro del mes, sin llegar al extremo de usar el valor mínimo, que podría aumentar el ruido o los falsos positivos. El uso de series temporales SAR para detectar cambios hidrológicos ha sido documentado por Schlaffer et al. (2015), y en este proyecto se complementa con una limpieza espacial basada en píxeles conectados.
+
+## Agua permanente, pendiente y recurrencia
+
+Uno de los puntos clave del análisis es separar, en la medida de lo posible, el agua permanente de las áreas inundadas temporalmente. Para esto se usa el producto JRC Global Surface Water, desarrollado por Pekel et al. (2016), específicamente la banda `seasonality`. En este caso se excluyen píxeles con presencia de agua durante diez o más meses del año, de modo que el análisis se concentre en zonas con comportamiento temporal o episódico.
+
+También se incorpora la pendiente derivada del DEM SRTM. Este filtro ayuda a reducir detecciones en zonas inclinadas, donde valores bajos de retrodispersión podrían estar asociados a sombras radar u otros efectos geométricos. El umbral de 5 grados funciona como una regla práctica para concentrar la detección en zonas más compatibles con planicies inundables.
+
+Finalmente, la frecuencia relativa se calcula como la proporción de meses con detección de inundación respecto al total de meses analizados. Esta idea es similar a los indicadores de ocurrencia temporal usados por Pekel et al. (2016) y a estudios de dinámica de inundación en planicies tropicales, como Martinez y Le Toan (2007). La clasificación en recurrencia baja, media y alta permite convertir esa información continua en un resultado más fácil de interpretar cartográficamente.
+
+# Objetivos
+
+## Objetivo general
+
+Analizar la distribución espacial y temporal de posibles áreas inundadas en el departamento del Meta durante el periodo 2015--2024, utilizando imágenes Sentinel-1 procesadas en Google Earth Engine y documentando el flujo de trabajo en un informe reproducible desarrollado en Quarto.
+
+## Objetivos específicos
+
+1. Construir una serie mensual de posibles áreas inundadas a partir de imágenes Sentinel-1 GRD, aplicando umbrales de retrodispersión, filtros topográficos y exclusión de agua permanente.
+
+2. Calcular indicadores de frecuencia absoluta, frecuencia relativa, recurrencia y área inundada para reconocer patrones espaciales y temporales durante el periodo 2015--2024.
+
+
+# Área de estudio
+
+## Delimitación geográfica
+
+El área de estudio corresponde al departamento del Meta, localizado en la región de la Orinoquía colombiana. Su extensión aproximada es de **85.635 km²** y su territorio combina tres condiciones espaciales importantes para este proyecto: el piedemonte de la cordillera Oriental, los valles aluviales asociados a los principales ríos y las planicies bajas de los Llanos Orientales.
+
+Esta combinación física hace que el Meta sea un territorio especialmente sensible a procesos de inundación. En las zonas de piedemonte pueden presentarse crecientes rápidas asociadas a la escorrentía proveniente de la cordillera, mientras que en las áreas de llanura predominan anegamientos y desbordamientos más extensos, relacionados con la baja pendiente y la dinámica estacional de las lluvias. Por esta razón, el departamento resulta adecuado para estudiar la recurrencia espacial de posibles zonas inundadas a partir de una serie temporal de imágenes satelitales.
+
+
+## Mapa de localización
+
+La @fig-area-estudio-meta muestra la localización general del departamento del Meta dentro de Colombia. Esta figura se usa como apoyo cartográfico para ubicar al lector antes de presentar los resultados de frecuencia y recurrencia de inundación.
+
+![Localización general del departamento del Meta dentro de Colombia. Fuente: Wikimedia Commons, usada como apoyo visual de localización.](figures/mapa_area_estudio_meta.png){#fig-area-estudio-meta width=70% fig-align="center"}
+
+## Preparación del AOI en Google Earth Engine
+
+El procesamiento definitivo se realiza con una geometría del departamento del Meta cargada en Google Earth Engine. El siguiente bloque resume la lógica usada para inicializar GEE y preparar el área de estudio. Esta parte es importante porque todas las colecciones satelitales, máscaras auxiliares y exportaciones se recortan con esta misma geometría.
+
+```python
+# Inicialización de Google Earth Engine
+
+import ee
+import geemap
+from IPython.display import display
+
+PROJECT_ID = "ee-juatorreslo"
+
+ee.Initialize(project=PROJECT_ID)
+
+print("Google Earth Engine inicializado correctamente.")
+```
+
+```python
+# Área de estudio: departamento del Meta desde GAUL
+
+AOI_MODO = "gaul_meta"
+
+if AOI_MODO == "gaul_meta":
+    zona = (
+        ee.FeatureCollection("FAO/GAUL/2015/level1")
+        .filter(ee.Filter.eq("ADM0_NAME", "Colombia"))
+        .filter(ee.Filter.eq("ADM1_NAME", "Meta"))
+    )
+    geom = zona.geometry()
+
+elif AOI_MODO == "asset":
+    AOI_ASSET = "projects/ee-juatorreslo/assets/aoi_inundaciones"
+    zona = ee.FeatureCollection(AOI_ASSET)
+    geom = zona.geometry()
+
+elif AOI_MODO == "shp":
+    RUTA_SHP = r"D:\MAESTRIA\PROGRAMACION_SIG\juatorreslo\PROYECTO_FINAL\VISUAL\aoi.shp"
+    zona = geemap.shp_to_ee(RUTA_SHP)
+    geom = zona.geometry()
+
+elif AOI_MODO == "geojson":
+    RUTA_GEOJSON = r"D:\MAESTRIA\PROGRAMACION_SIG\juatorreslo\PROYECTO_FINAL\VISUAL\aoi.geojson"
+    zona = geemap.geojson_to_ee(RUTA_GEOJSON)
+    geom = zona.geometry()
+
+else:
+    raise ValueError("AOI_MODO no válido.")
+
+print("Área de estudio cargada correctamente.")
+```
+
+```python
+# Visualización del área de estudio
+
+Map = geemap.Map()
+Map.centerObject(zona, 8)
+Map.addLayer(zona, {"color": "red"}, "Área de estudio")
+display(Map)
+```
+
+Con esta delimitación, el análisis se mantiene sobre una unidad territorial clara y comparable: el departamento del Meta. Esto permite que los mapas de frecuencia absoluta, frecuencia relativa, recurrencia y área inundada se interpreten siempre dentro del mismo marco espacial.
+
+# Fuentes de datos
+
+Las fuentes de datos se seleccionaron buscando un equilibrio entre disponibilidad, respaldo metodológico y facilidad de reproducción en Google Earth Engine. El flujo combina información SAR, agua superficial histórica, topografía y límites administrativos. Esta integración permite detectar posibles zonas inundadas, reducir algunos falsos positivos y cuantificar los resultados sin salir del entorno de procesamiento en la nube.
+
+| Fuente | Producto / colección | Resolución aproximada | Uso dentro del proyecto | Sustento metodológico |
+|---|---:|---:|---|---|
+| Sentinel-1 GRD | `COPERNICUS/S1_GRD` | 10 m | Detección mensual de posibles áreas inundadas mediante retrodispersión SAR | Mapeo de inundaciones con Sentinel-1 y umbralización SAR (Twele et al., 2016; Amitrano et al., 2018; Cao et al., 2019). |
+| JRC Global Surface Water | `JRC/GSW1_4/GlobalSurfaceWater` | 30 m | Exclusión de cuerpos de agua permanentes mediante la banda `seasonality` | Producto global de agua superficial y métricas de ocurrencia/estacionalidad (Pekel et al., 2016). |
+| SRTM | `USGS/SRTMGL1_003` | 30 m | Cálculo de pendiente para reducir falsas detecciones en zonas inclinadas | Apoyo topográfico para diferenciar zonas compatibles con llanuras inundables. |
+| FAO GAUL | `FAO/GAUL/2015/level1` | Vectorial | Delimitación administrativa del departamento del Meta | Delimitación reproducible dentro del catálogo de GEE. |
+| Google Earth Engine | Plataforma de cómputo en la nube | No aplica | Procesamiento multitemporal y exportación de resultados | Análisis geoespacial de escala planetaria y procesamiento de colecciones satelitales (Gorelick et al., 2017). |
+
+# Metodología
+
+La metodología se planteó como una secuencia de trabajo práctica y reproducible. La idea fue partir de imágenes Sentinel-1, construir una serie mensual, aplicar reglas de detección de agua temporal y, finalmente, resumir los resultados en mapas de frecuencia, recurrencia y tablas de área. El flujo retoma elementos comunes en cadenas de mapeo de inundaciones con SAR (Twele et al., 2016; Amitrano et al., 2018; Cao et al., 2019), pero los adapta a una lectura multitemporal del departamento del Meta para el periodo 2015--2024.
+
+## Flujo general de trabajo
+
+La metodología se organiza en siete fases principales:
+
+| Fase | Proceso | Descripción | Referente bibliográfico |
+|---:|---|---|---|
+| 1 | Delimitación del área de estudio | Selección del departamento del Meta mediante GAUL o carga de un AOI propio. | Reproducibilidad mediante datos disponibles en GEE (Gorelick et al., 2017). |
+| 2 | Carga de datos SAR | Filtrado de Sentinel-1 GRD por fecha, geometría, modo de adquisición y polarización. | Preparación y análisis de Sentinel-1 SAR en GEE (Mullissa et al., 2021). |
+| 3 | Capas auxiliares | Generación de máscara de agua permanente JRC y pendiente SRTM. | Agua superficial global y estacionalidad (Pekel et al., 2016). |
+| 4 | Composición mensual | Construcción de compuestos mensuales de retrodispersión con percentil 10, mediana o mínimo. | Series temporales SAR para detección de inundaciones (Schlaffer et al., 2015). |
+| 5 | Detección de inundación | Aplicación de umbral SAR, exclusión de agua permanente, filtro de pendiente y limpieza espacial. | Cadenas automatizadas de mapeo SAR (Twele et al., 2016; Amitrano et al., 2018). |
+| 6 | Indicadores | Cálculo de frecuencia absoluta, frecuencia relativa, recurrencia y áreas por periodo. | Ocurrencia temporal y dinámica de inundación (Pekel et al., 2016; Martinez & Le Toan, 2007). |
+| 7 | Exportación | Exportación de tablas CSV y rásteres GeoTIFF a Google Drive o a carpeta local. | Ciencia abierta y reproducibilidad del flujo de trabajo. |
+
+## Configuración general del análisis
+
+Los parámetros principales se agrupan en un diccionario de configuración. Esto hace que el flujo sea más fácil de ajustar: si se quiere cambiar el periodo, el umbral SAR, la escala de exportación o el criterio de recurrencia, basta con modificar una parte del script y no todo el procesamiento.
+
+```python
+CONFIG = {
+    "fecha_inicio": "2015-01-01",
+    "fecha_fin": "2024-12-31",
+
+    # Método mensual:
+    # "median" = más conservador
+    # "p10"    = recomendado para captar agua temporal
+    # "min"    = muy sensible, puede sobredetectar
+    "metodo_mensual": "p10",
+
+    # Umbrales SAR
+    # Si detecta muy poco, probar -17
+    # Si detecta demasiado, probar -19
+    "umbral_vv": -18,
+    "umbral_vh": -23,
+
+    # False = solo VV
+    # True  = VV y VH simultáneamente
+    "usar_vh": False,
+
+    # Pendiente máxima en grados
+    "pendiente_max": 5,
+
+    # Escala para exportar raster
+    "escala": 30,
+
+    # Escala para calcular áreas
+    # 250 = rápido
+    # 100 = más detallado
+    # 30  = más preciso, pero puede tardar mucho
+    "escala_area": 250,
+
+    # Mínimo de meses detectados como inundados
+    "min_meses_inundado": 2,
+
+    # Limpieza espacial
+    "min_pixeles_conectados": 8,
+
+    # Carpeta de Google Drive
+    "carpeta_drive": "GEE_Inundaciones_Meta",
+
+    # Mes específico para visualizar/exportar
+    "mes_visualizar": "2024-05",
+}
+
+metodos_validos = ["median", "min", "p10"]
+
+if CONFIG["metodo_mensual"] not in metodos_validos:
+    raise ValueError(
+        f"metodo_mensual inválido: {CONFIG['metodo_mensual']}. "
+        f"Usa uno de estos: {metodos_validos}"
+    )
+
+print("Configuración cargada.")
+```
+
+## Carga y filtrado de Sentinel-1
+
+La colección base del análisis es `COPERNICUS/S1_GRD`. Las imágenes se filtran por el departamento del Meta, el periodo 2015--2024, el modo IW y las polarizaciones disponibles. En la configuración principal se trabaja con VV, porque esta polarización suele responder bien a superficies de agua abierta mediante valores bajos de retrodispersión.
+
+```python
+bandas_s1 = ["VV", "VH"] if CONFIG["usar_vh"] else ["VV"]
+
+s1 = (
+    ee.ImageCollection("COPERNICUS/S1_GRD")
+    .filterBounds(geom)
+    .filterDate(CONFIG["fecha_inicio"], CONFIG["fecha_fin"])
+    .filter(ee.Filter.eq("instrumentMode", "IW"))
+    .filter(ee.Filter.listContains("transmitterReceiverPolarisation", "VV"))
+    .filter(ee.Filter.listContains("transmitterReceiverPolarisation", "VH"))
+    .select(bandas_s1)
+)
+
+print("Número de imágenes Sentinel-1 originales:", s1.size().getInfo())
+```
+
+## Capas auxiliares: agua permanente y pendiente
+
+Como la señal SAR puede confundir agua temporal con agua permanente o con zonas de sombra, se añadieron dos apoyos al análisis. El primero es una máscara de agua permanente tomada de JRC Global Surface Water; el segundo es una capa de pendiente derivada de SRTM. Con esto se busca que el resultado se concentre más en zonas con comportamiento temporal y menos en cuerpos de agua persistentes o áreas topográficamente poco probables (Pekel et al., 2016).
+
+```python
+# Agua permanente histórica JRC
+jrc = ee.Image("JRC/GSW1_4/GlobalSurfaceWater")
+
+jrc_mask = jrc.select("seasonality").mask()
+
+agua_permanente = (
+    jrc.select("seasonality")
+    .gte(10)
+    .updateMask(jrc_mask)
+    .unmask(0)
+    .clip(geom)
+)
+
+# Pendiente SRTM
+dem = ee.Image("USGS/SRTMGL1_003").clip(geom)
+pendiente = ee.Terrain.slope(dem).clip(geom)
+
+print("Capas auxiliares creadas.")
+```
+
+```python
+Map = geemap.Map()
+Map.centerObject(zona, 8)
+
+Map.addLayer(zona, {"color": "red"}, "Área de estudio")
+Map.addLayer(
+    agua_permanente.updateMask(agua_permanente),
+    {"palette": ["0000ff"]},
+    "Agua permanente JRC"
+)
+Map.addLayer(
+    pendiente,
+    {"min": 0, "max": 30},
+    "Pendiente SRTM"
+)
+
+display(Map)
+```
+
+## Compuestos mensuales Sentinel-1
+
+Para que todos los meses sean comparables, las imágenes Sentinel-1 se agrupan por periodo mensual. Luego, cada grupo se resume con un estadístico de reducción. En este caso se utiliza el percentil 10 (`p10`), porque ayuda a captar valores bajos de retrodispersión que podrían estar asociados con agua temporal dentro del mes, sin ser tan sensible al ruido como el valor mínimo. Esta decisión se relaciona con el uso de series SAR para detectar cambios hidrológicos de corta duración (Schlaffer et al., 2015).
+
+```python
+fecha_inicio_ee = ee.Date(CONFIG["fecha_inicio"])
+fecha_fin_ee = ee.Date(CONFIG["fecha_fin"]).advance(1, "day")
+
+n_meses = fecha_fin_ee.difference(fecha_inicio_ee, "month").ceil()
+lista_meses = ee.List.sequence(0, n_meses.subtract(1))
+
+
+def crear_feature_mes(m):
+    m = ee.Number(m)
+
+    inicio_mes = fecha_inicio_ee.advance(m, "month")
+    fin_mes = inicio_mes.advance(1, "month")
+
+    col_mes = s1.filterDate(inicio_mes, fin_mes)
+    n_img_mes = col_mes.size()
+
+    return ee.Feature(
+        None,
+        {
+            "m": m,
+            "inicio_millis": inicio_mes.millis(),
+            "periodo": inicio_mes.format("YYYY-MM"),
+            "year": inicio_mes.get("year"),
+            "mes": inicio_mes.get("month"),
+            "n_imagenes_mes": n_img_mes,
+        },
+    )
+
+
+meses_fc = (
+    ee.FeatureCollection(lista_meses.map(crear_feature_mes))
+    .filter(ee.Filter.gt("n_imagenes_mes", 0))
+)
+
+meses_lista = meses_fc.toList(meses_fc.size())
+
+
+def crear_compuesto_mensual(f):
+    f = ee.Feature(f)
+
+    inicio_mes = ee.Date(f.get("inicio_millis"))
+    fin_mes = inicio_mes.advance(1, "month")
+
+    col_mes = s1.filterDate(inicio_mes, fin_mes)
+
+    if CONFIG["metodo_mensual"] == "median":
+        reducido = col_mes.median()
+    elif CONFIG["metodo_mensual"] == "min":
+        reducido = col_mes.min()
+    elif CONFIG["metodo_mensual"] == "p10":
+        reducido = col_mes.reduce(ee.Reducer.percentile([10]))
+    else:
+        reducido = col_mes.median()
+
+    bandas = ["VV", "VH"] if CONFIG["usar_vh"] else ["VV"]
+    reducido = reducido.rename(bandas)
+
+    vv_suavizado = (
+        reducido.select("VV")
+        .focal_mean(radius=50, kernelType="circle", units="meters")
+        .rename("VV_suavizado")
+    )
+
+    compuesto = vv_suavizado
+
+    if CONFIG["usar_vh"]:
+        vh_suavizado = (
+            reducido.select("VH")
+            .focal_mean(radius=50, kernelType="circle", units="meters")
+            .rename("VH_suavizado")
+        )
+
+        vv_menos_vh = vv_suavizado.subtract(vh_suavizado).rename("VV_menos_VH")
+
+        compuesto = vv_suavizado.addBands(vh_suavizado).addBands(vv_menos_vh)
+
+    return (
+        compuesto
+        .clip(geom)
+        .set("system:time_start", inicio_mes.millis())
+        .set("periodo", f.get("periodo"))
+        .set("year", f.get("year"))
+        .set("mes", f.get("mes"))
+        .set("n_imagenes_mes", f.get("n_imagenes_mes"))
+        .set("metodo_mensual", CONFIG["metodo_mensual"])
+    )
+
+
+s1_mensual = ee.ImageCollection.fromImages(meses_lista.map(crear_compuesto_mensual))
+
+print("Número de imágenes mensuales:", s1_mensual.size().getInfo())
+```
+
+## Detección de posibles áreas inundadas
+
+La detección mensual combina varios criterios sencillos: valores bajos de VV, eliminación de valores extremos, exclusión de agua permanente y restricción a zonas con pendiente baja. Después se aplica una limpieza espacial para retirar pequeños grupos de píxeles aislados. Esta aproximación por umbral es común en mapeo de inundaciones con SAR, aunque su desempeño siempre depende de condiciones locales como cobertura del suelo, rugosidad del agua y geometría de adquisición (Twele et al., 2016; Manjusree et al., 2012; Cao et al., 2019).
+
+```python
+def detectar_inundacion(img):
+    vv = img.select("VV_suavizado")
+
+    # VV bajo = posible agua.
+    # Se eliminan valores extremadamente bajos para reducir sombras/artefactos.
+    agua_sar = vv.lt(CONFIG["umbral_vv"]).And(vv.gt(-30))
+
+    if CONFIG["usar_vh"]:
+        agua_sar = agua_sar.And(img.select("VH_suavizado").lt(CONFIG["umbral_vh"]))
+
+    inundacion = (
+        agua_sar
+        .And(agua_permanente.Not())
+        .And(pendiente.lt(CONFIG["pendiente_max"]))
+        .rename("inundacion")
+        .clip(geom)
+    )
+
+    # Limpieza espacial
+    inundacion_mascara = inundacion.selfMask()
+
+    pixeles_conectados = inundacion_mascara.connectedPixelCount(100, True)
+
+    inundacion = (
+        inundacion_mascara
+        .updateMask(pixeles_conectados.gte(CONFIG["min_pixeles_conectados"]))
+        .unmask(0)
+        .rename("inundacion")
+        .clip(geom)
+    )
+
+    return inundacion.copyProperties(
+        img,
+        [
+            "system:time_start",
+            "periodo",
+            "year",
+            "mes",
+            "n_imagenes_mes",
+            "metodo_mensual",
+        ],
+    )
+
+
+inundaciones = s1_mensual.map(detectar_inundacion)
+
+print("Número de máscaras mensuales:", inundaciones.size().getInfo())
+```
+
+## Frecuencia absoluta, frecuencia relativa y recurrencia
+
+Una vez generadas las máscaras mensuales, se calcula cuántas veces se repite la detección en cada píxel. Ese conteo se denomina frecuencia absoluta. Luego se transforma en porcentaje para obtener la frecuencia relativa, que facilita comparar zonas con mayor o menor recurrencia dentro del periodo analizado. Esta lógica es cercana a los indicadores de ocurrencia temporal usados en productos globales de agua superficial y en estudios multitemporales de dinámica de inundación (Pekel et al., 2016; Martinez & Le Toan, 2007).
+
+$$
+F_{relativa} = \frac{F_{absoluta}}{N_{meses}} \times 100
+$$
+
+Donde $F_{relativa}$ es la frecuencia relativa de inundación, $F_{absoluta}$ es el número de meses con detección de inundación y $N_{meses}$ es el total de meses analizados.
+
+```python
+total_meses = inundaciones.size()
+
+frecuencia_absoluta = (
+    inundaciones
+    .sum()
+    .rename("frecuencia_absoluta_meses")
+    .clip(geom)
+)
+
+frecuencia_relativa = (
+    frecuencia_absoluta
+    .divide(ee.Image.constant(total_meses))
+    .multiply(100)
+    .rename("frecuencia_relativa_pct")
+    .clip(geom)
+)
+
+print("Frecuencia absoluta y relativa calculadas.")
+```
+
+Para facilitar la lectura del mapa, la frecuencia relativa se agrupa en tres categorías: baja, media y alta. Esta reclasificación no reemplaza el valor continuo de frecuencia, pero ayuda a comunicar el patrón espacial de manera más clara.
+
+```python
+recurrencia = (
+    ee.Image(0)
+    .where(frecuencia_relativa.gt(0).And(frecuencia_relativa.lte(5)), 1)
+    .where(frecuencia_relativa.gt(5).And(frecuencia_relativa.lte(15)), 2)
+    .where(frecuencia_relativa.gt(15), 3)
+    .rename("recurrencia_inundacion")
+    .clip(geom)
+)
+
+print("Clasificación de recurrencia creada.")
+```
+
+## Frecuencia anual
+
+Además del resumen acumulado para 2015--2024, se genera una imagen multibanda con la frecuencia anual. De esta forma es posible revisar años específicos y comparar visualmente cómo cambia la detección de inundación a lo largo de la serie.
+
+```python
+years = list(range(2015, 2025))
+
+imagenes_anuales = []
+nombres_bandas_anuales = []
+
+for year in years:
+    col_anual = inundaciones.filter(ee.Filter.eq("year", year))
+    n_meses_year = col_anual.size()
+
+    nombre_banda = f"frec_{year}"
+    nombres_bandas_anuales.append(nombre_banda)
+
+    imagen_anual = ee.Image(
+        ee.Algorithms.If(
+            n_meses_year.gt(0),
+            col_anual
+            .sum()
+            .divide(ee.Image.constant(n_meses_year))
+            .multiply(100)
+            .rename(nombre_banda)
+            .clip(geom),
+            ee.Image.constant(0).rename(nombre_banda).clip(geom),
+        )
+    ).set("year", year)
+
+    imagenes_anuales.append(imagen_anual)
+
+
+frecuencia_anual_bandas = (
+    ee.Image.cat(*imagenes_anuales)
+    .rename(nombres_bandas_anuales)
+    .clip(geom)
+)
+
+print("Bandas frecuencia anual:", frecuencia_anual_bandas.bandNames().getInfo())
+```
+
+## Cálculo de áreas
+
+El cálculo de áreas se realiza con `ee.Image.pixelArea()` y se reporta en hectáreas y kilómetros cuadrados. Para evitar que el proceso sea demasiado pesado, el script separa la escala usada para exportar mapas de la escala usada para resumir áreas.
+
+```python
+def calcular_area_ha(img):
+    area = (
+        ee.Image.pixelArea()
+        .divide(10000)
+        .updateMask(img.eq(1))
+        .rename("area_ha")
+    )
+
+    stats = area.reduceRegion(
+        reducer=ee.Reducer.sum(),
+        geometry=geom,
+        scale=CONFIG["escala_area"],
+        maxPixels=1e13,
+        tileScale=8,
+        bestEffort=True
+    )
+
+    return ee.Number(stats.get("area_ha"))
+
+
+print("Función de área creada.")
+```
+
+```python
+def crear_feature_area_mensual(img):
+    img = ee.Image(img)
+
+    area_ha = calcular_area_ha(img)
+    area_km2 = area_ha.divide(100)
+
+    return ee.Feature(
+        None,
+        {
+            "periodo": img.get("periodo"),
+            "year": img.get("year"),
+            "mes": img.get("mes"),
+            "n_imagenes_mes": img.get("n_imagenes_mes"),
+            "area_inundada_ha": area_ha.round(),
+            "area_inundada_km2": area_km2.round(),
+            "escala_area_m": CONFIG["escala_area"],
+        },
+    )
+
+
+lista_inundaciones = inundaciones.toList(inundaciones.size())
+
+tabla_area_mensual = ee.FeatureCollection(
+    lista_inundaciones.map(crear_feature_area_mensual)
+)
+
+print("Tabla de área mensual creada.")
+```
+
+```python
+features_anuales = []
+
+for year in years:
+    inundacion_anual = (
+        inundaciones
+        .filter(ee.Filter.eq("year", year))
+        .max()
+        .rename("inundacion_anual")
+        .clip(geom)
+    )
+
+    area_ha = calcular_area_ha(inundacion_anual)
+    area_km2 = area_ha.divide(100)
+
+    feature = ee.Feature(
+        None,
+        {
+            "year": year,
+            "area_inundada_ha": area_ha.round(),
+            "area_inundada_km2": area_km2.round(),
+            "escala_area_m": CONFIG["escala_area"],
+        },
+    )
+
+    features_anuales.append(feature)
+
+
+tabla_area_anual = ee.FeatureCollection(features_anuales)
+
+print("Tabla de área anual creada.")
+```
+
+```python
+inundacion_recurrente_periodo = (
+    frecuencia_absoluta
+    .gte(CONFIG["min_meses_inundado"])
+    .rename("inundacion_recurrente_periodo")
+    .clip(geom)
+)
+
+area_recurrente_ha = calcular_area_ha(inundacion_recurrente_periodo)
+area_recurrente_km2 = area_recurrente_ha.divide(100)
+
+tabla_area_recurrente_periodo = ee.FeatureCollection(
+    [
+        ee.Feature(
+            None,
+            {
+                "periodo": "2015-2024",
+                "criterio": f"minimo_{CONFIG['min_meses_inundado']}_meses",
+                "area_inundable_recurrente_ha": area_recurrente_ha.round(),
+                "area_inundable_recurrente_km2": area_recurrente_km2.round(),
+                "escala_area_m": CONFIG["escala_area"],
+            },
+        )
+    ]
+)
+
+print("Tabla de área recurrente del periodo creada.")
+```
+
+```python
+categorias = {
+    1: "Baja",
+    2: "Media",
+    3: "Alta",
+}
+
+features_clases = []
+
+for clase, categoria in categorias.items():
+    mascara_clase = recurrencia.eq(clase).rename("clase").clip(geom)
+
+    area_ha = calcular_area_ha(mascara_clase)
+    area_km2 = area_ha.divide(100)
+
+    feature = ee.Feature(
+        None,
+        {
+            "clase_recurrencia": clase,
+            "categoria": categoria,
+            "area_ha": area_ha.round(),
+            "area_km2": area_km2.round(),
+            "escala_area_m": CONFIG["escala_area"],
+        },
+    )
+
+    features_clases.append(feature)
+
+
+tabla_area_por_clase = ee.FeatureCollection(features_clases)
+
+print("Tabla de área por clase de recurrencia creada.")
+```
+
+## Exportación de resultados a Google Drive
+
+Las salidas se exportan a Google Drive desde Earth Engine. Esta opción resultó más estable que la exportación local, especialmente por los conflictos que pueden aparecer en Windows cuando hay varias instalaciones de PROJ, GDAL o PostGIS. Una vez descargados los GeoTIFF, los mapas finales se prepararon en QGIS y se guardaron como imágenes PNG para incorporarlos al documento.
+
+```python
+# Exportar tabla mensual a Google Drive
+
+Export = ee.batch.Export
+
+Export.table.toDrive(
+    collection=tabla_area_mensual,
+    description="AOI_area_inundada_mensual_2015_2024",
+    folder=CONFIG["carpeta_drive"],
+    fileNamePrefix="AOI_area_inundada_mensual_2015_2024",
+    fileFormat="CSV"
+).start()
+
+Export.table.toDrive(
+    collection=tabla_area_anual,
+    description="AOI_area_inundada_anual_2015_2024",
+    folder=CONFIG["carpeta_drive"],
+    fileNamePrefix="AOI_area_inundada_anual_2015_2024",
+    fileFormat="CSV"
+).start()
+
+Export.table.toDrive(
+    collection=tabla_area_recurrente_periodo,
+    description="AOI_area_inundable_recurrente_2015_2024",
+    folder=CONFIG["carpeta_drive"],
+    fileNamePrefix="AOI_area_inundable_recurrente_2015_2024",
+    fileFormat="CSV"
+).start()
+
+Export.table.toDrive(
+    collection=tabla_area_por_clase,
+    description="AOI_area_por_clase_recurrencia_2015_2024",
+    folder=CONFIG["carpeta_drive"],
+    fileNamePrefix="AOI_area_por_clase_recurrencia_2015_2024",
+    fileFormat="CSV"
+).start()
+```
+
+```python
+# Exportar rásteres principales a Google Drive
+
+Export.image.toDrive(
+    image=frecuencia_relativa.toFloat(),
+    description="AOI_frecuencia_relativa_inundacion_mensual_2015_2024",
+    folder=CONFIG["carpeta_drive"],
+    fileNamePrefix="AOI_frecuencia_relativa_inundacion_mensual_2015_2024",
+    region=geom,
+    scale=CONFIG["escala"],
+    maxPixels=1e13
+).start()
+
+Export.image.toDrive(
+    image=frecuencia_absoluta.toInt16(),
+    description="AOI_frecuencia_absoluta_inundacion_mensual_2015_2024",
+    folder=CONFIG["carpeta_drive"],
+    fileNamePrefix="AOI_frecuencia_absoluta_inundacion_mensual_2015_2024",
+    region=geom,
+    scale=CONFIG["escala"],
+    maxPixels=1e13
+).start()
+
+Export.image.toDrive(
+    image=recurrencia.toByte(),
+    description="AOI_recurrencia_inundacion_2015_2024",
+    folder=CONFIG["carpeta_drive"],
+    fileNamePrefix="AOI_recurrencia_inundacion_2015_2024",
+    region=geom,
+    scale=CONFIG["escala"],
+    maxPixels=1e13
+).start()
+
+Export.image.toDrive(
+    image=inundacion_recurrente_periodo.toByte(),
+    description=f"AOI_zona_inundable_recurrente_min_{CONFIG['min_meses_inundado']}_meses_2015_2024",
+    folder=CONFIG["carpeta_drive"],
+    fileNamePrefix=f"AOI_zona_inundable_recurrente_min_{CONFIG['min_meses_inundado']}_meses_2015_2024",
+    region=geom,
+    scale=CONFIG["escala"],
+    maxPixels=1e13
+).start()
+```
+
+# Resultados y discusión
+
+Esta sección reúne los principales productos generados por el script: mapas en formato PNG y tablas CSV con el cálculo de áreas. Para que el documento pueda renderizarse sin depender de una nueva ejecución de Google Earth Engine, las salidas se guardaron previamente en las carpetas `figures/` y `data/`.
+
+
+## Productos incorporados
+
+En el cuerpo del informe se incluyen los productos más representativos del flujo de trabajo. Los mapas de frecuencia y recurrencia muestran la lectura espacial del fenómeno, mientras que las tablas permiten respaldar esa interpretación con valores de área.
+
+- `figures/mapa_inundacion_mensual_2024_05.png`: ejemplo de una máscara mensual de inundación.
+- `figures/mapa_frecuencia_absoluta_inundacion_mensual_2015_2024.png`: conteo total de meses con detección.
+- `figures/mapa_frecuencia_relativa_inundacion_mensual_2015_2024.png`: porcentaje de meses con detección respecto al total analizado.
+- `figures/mapa_recurrencia_inundacion_mensual_2015_2024.png`: clasificación de recurrencia baja, media y alta.
+- `figures/mapa_zona_inundable_recurrente_min_2_meses_2015_2024.png`: zonas con al menos dos meses de detección.
+- `figures/mapa_frecuencia_inundacion_2015.png`, `figures/mapa_frecuencia_anual_inundacion_2020.png` y `figures/mapa_frecuencia_anual_inundacion_2024.png`: comparación anual de tres momentos de la serie.
+- `data/AOI_area_inundada_anual_2015_2024.csv`, `data/AOI_area_inundada_mensual_2015_2024.csv`, `data/AOI_area_inundable_recurrente_2015_2024.csv` y `data/AOI_area_por_clase_recurrencia_2015_2024.csv`: salidas tabulares para cuantificar áreas.
+
+## Máscara mensual de inundación: mayo de 2024
+
+La Figura @fig-inundacion-mensual-2024-05 muestra un ejemplo puntual del resultado mensual para mayo de 2024. En este caso, los píxeles resaltados corresponden a zonas donde Sentinel-1 presentó una respuesta compatible con agua temporal, después de aplicar los filtros de agua permanente, pendiente y limpieza espacial.
+
+![Máscara mensual de inundación detectada para mayo de 2024 en el departamento del Meta.](figures/mapa_inundacion_mensual_2024_05.png){#fig-inundacion-mensual-2024-05 width=90% fig-align="center"}
+
+Este mapa ayuda a entender el insumo básico del análisis: una máscara mensual binaria. A partir de muchas máscaras de este tipo se construyen los productos acumulados de frecuencia y recurrencia. Por eso, no debe leerse como un mapa oficial de inundación, sino como una detección satelital generada bajo criterios específicos.
+
+## Frecuencia absoluta de inundación 2015--2024
+
+La frecuencia absoluta cuenta cuántos meses fue detectado cada píxel como posible inundación durante el periodo 2015--2024. Este producto es útil porque no se queda en una sola fecha, sino que resume la repetición temporal del fenómeno en toda la serie.
+
+![Frecuencia absoluta de inundación mensual para el periodo 2015--2024 en el departamento del Meta.](figures/mapa_frecuencia_absoluta_inundacion_mensual_2015_2024.png){#fig-frecuencia-absoluta width=90% fig-align="center"}
+
+En la Figura @fig-frecuencia-absoluta se observan las zonas donde la señal de inundación aparece con mayor insistencia a lo largo del periodo. Estos sectores son los más relevantes para una lectura territorial, porque muestran repetición en el tiempo y no únicamente detecciones aisladas.
+
+## Frecuencia relativa de inundación 2015--2024
+
+La frecuencia relativa transforma el conteo anterior en porcentaje. Esto permite comparar mejor los píxeles, ya que cada valor representa la proporción de meses en los que se detectó posible inundación respecto al total de meses analizados.
+
+![Frecuencia relativa de inundación mensual para el periodo 2015--2024 en el departamento del Meta.](figures/mapa_frecuencia_relativa_inundacion_mensual_2015_2024.png){#fig-frecuencia-relativa width=90% fig-align="center"}
+
+La Figura @fig-frecuencia-relativa permite leer la recurrencia de manera más intuitiva. Los valores altos indican sectores donde la condición compatible con inundación se repitió con mayor frecuencia, mientras que los valores bajos sugieren detecciones ocasionales. Este producto es la base para la clasificación de recurrencia.
+
+## Clasificación de recurrencia de inundación
+
+Con la frecuencia relativa se generó una clasificación en tres niveles: baja, media y alta recurrencia. Esta reclasificación facilita la comunicación del resultado, especialmente cuando el interés es identificar zonas prioritarias para revisión o validación posterior.
+
+![Recurrencia mensual de inundación para el periodo 2015--2024 en el departamento del Meta.](figures/mapa_recurrencia_inundacion_mensual_2015_2024.png){#fig-recurrencia-mensual width=90% fig-align="center"}
+
+La Figura @fig-recurrencia-mensual resume el patrón espacial de la serie temporal. Las clases de mayor recurrencia deben interpretarse como zonas donde la señal satelital fue más persistente y, por lo tanto, como áreas candidatas para contrastar con registros históricos, información hidrometeorológica o cartografía oficial.
+
+## Zona inundable recurrente con mínimo dos meses de detección
+
+Además de las clases de recurrencia, se generó una máscara binaria que identifica los píxeles con al menos dos meses de detección durante 2015--2024. Este criterio ayuda a separar detecciones puntuales de zonas con una repetición mínima en el tiempo.
+
+![Zona inundable recurrente definida como los píxeles con al menos dos meses de inundación detectada durante el periodo 2015--2024 en el departamento del Meta.](figures/mapa_zona_inundable_recurrente_min_2_meses_2015_2024.png){#fig-zona-inundable-recurrente width=90% fig-align="center"}
+
+La Figura @fig-zona-inundable-recurrente funciona como una síntesis operativa del análisis. Su principal valor está en mostrar, de forma sencilla, dónde se concentra la evidencia mínima de recurrencia temporal de inundación.
+
+## Comparación anual: 2015, 2020 y 2024
+
+Aunque se generaron mapas anuales para todo el periodo, en el cuerpo del informe se presentan tres años para evitar repetición: 2015 como punto de partida, 2020 como año intermedio y 2024 como cierre de la serie. La comparación permite revisar visualmente si las zonas detectadas mantienen cierta persistencia espacial o si cambian entre años.
+
+![Frecuencia anual de inundación detectada para el año 2015 en el departamento del Meta.](figures/mapa_frecuencia_inundacion_2015.png){#fig-frecuencia-2015 width=90% fig-align="center"}
+
+La Figura @fig-frecuencia-2015 muestra el comportamiento inicial de la serie y sirve como referencia para contrastar los años posteriores.
+
+![Frecuencia anual de inundación detectada para el año 2020 en el departamento del Meta.](figures/mapa_frecuencia_anual_inundacion_2020.png){#fig-frecuencia-2020 width=90% fig-align="center"}
+
+La Figura @fig-frecuencia-2020 representa un momento intermedio del periodo. Su comparación con 2015 y 2024 permite observar si las detecciones se mantienen en los mismos sectores o si aparecen cambios en la distribución espacial.
+
+![Frecuencia anual de inundación detectada para el año 2024 en el departamento del Meta.](figures/mapa_frecuencia_anual_inundacion_2024.png){#fig-frecuencia-2024 width=90% fig-align="center"}
+
+La Figura @fig-frecuencia-2024 muestra el último año analizado. En conjunto, los tres mapas permiten tener una lectura rápida de la dinámica anual sin sobrecargar el documento con todos los años de la serie.
+
+## Resultados tabulares
+
+Los mapas se complementan con cuatro tablas CSV exportadas desde Google Earth Engine. En esta versión del informe las tablas se muestran directamente dentro del documento para que la lectura no dependa únicamente de abrir los archivos externos. Aun así, los CSV deben conservarse en la carpeta `data/`, porque hacen parte de los insumos reproducibles del proyecto.
+
+Las tablas cumplen funciones distintas: la tabla anual resume la variación entre años; la tabla mensual permite revisar la estacionalidad; la tabla de zona recurrente sintetiza el área que cumple el criterio mínimo de recurrencia; y la tabla por clase cuantifica la superficie clasificada como baja, media o alta recurrencia.
+
+```{r}
+#| label: funciones-tablas-csv
+#| echo: false
+#| eval: true
+#| message: false
+#| warning: false
+#| results: asis
+
+leer_csv_robusto <- function(ruta) {
+  if (!file.exists(ruta)) {
+    return(NULL)
+  }
+
+  tabla <- try(utils::read.csv(ruta, stringsAsFactors = FALSE, check.names = FALSE), silent = TRUE)
+
+  # Si quedó una sola columna, probablemente el separador es punto y coma.
+  if (inherits(tabla, "try-error") || ncol(tabla) == 1) {
+    tabla <- try(utils::read.csv2(ruta, stringsAsFactors = FALSE, check.names = FALSE), silent = TRUE)
+  }
+
+  if (inherits(tabla, "try-error")) {
+    return(NULL)
+  }
+
+  tabla
+}
+
+formatear_tabla <- function(tabla, max_filas = 12, max_columnas = 7) {
+  if (is.null(tabla)) {
+    return(NULL)
+  }
+
+  # Limpieza ligera de nombres para que se lean mejor en el PDF.
+  names(tabla) <- gsub("_", " ", names(tabla))
+
+  # Redondeo de columnas numéricas.
+  for (columna in names(tabla)) {
+    if (is.numeric(tabla[[columna]])) {
+      tabla[[columna]] <- round(tabla[[columna]], 2)
+    }
+  }
+
+  # Evita tablas demasiado anchas en PDF.
+  if (ncol(tabla) > max_columnas) {
+    tabla <- tabla[, seq_len(max_columnas), drop = FALSE]
+  }
+
+  # Evita tablas demasiado largas en el cuerpo del informe.
+  if (nrow(tabla) > max_filas) {
+    tabla <- tabla[seq_len(max_filas), , drop = FALSE]
+  }
+
+  tabla
+}
+
+mostrar_csv <- function(ruta, titulo, max_filas = 12, max_columnas = 7) {
+  tabla <- leer_csv_robusto(ruta)
+
+  if (is.null(tabla)) {
+    cat(paste0("> **Nota:** No se encontró o no se pudo leer el archivo `", ruta, "`. Verifique que esté guardado en la carpeta `data/`.
+
+"))
+    return(invisible(NULL))
+  }
+
+  filas_originales <- nrow(tabla)
+  columnas_originales <- ncol(tabla)
+  tabla_mostrar <- formatear_tabla(tabla, max_filas = max_filas, max_columnas = max_columnas)
+
+  nota <- ""
+  if (filas_originales > nrow(tabla_mostrar)) {
+    nota <- paste0(" Se muestran las primeras ", nrow(tabla_mostrar), " filas de ", filas_originales, ".")
+  }
+  if (columnas_originales > ncol(tabla_mostrar)) {
+    nota <- paste0(nota, " Se muestran ", ncol(tabla_mostrar), " columnas de ", columnas_originales, " para evitar desbordes en PDF.")
+  }
+
+  cat(paste0("
+", titulo, "
+
+"))
+  # El argumento sep = "\n" es importante: evita que las filas se peguen en una sola línea.
+  cat(knitr::kable(tabla_mostrar, format = "pipe"), sep = "\n")
+  cat("
+
+")
+
+  if (nzchar(nota)) {
+    cat(paste0("*Nota:*", nota, " La tabla completa queda disponible en `", ruta, "`.
+
+"))
+  }
+}
+```
+
+### Área inundada anual
+
+La siguiente tabla resume el área detectada por año. Es la salida más útil para comparar la magnitud espacial del fenómeno entre 2015 y 2024.
+
+```{r}
+#| label: tabla-area-inundada-anual
+#| echo: false
+#| eval: true
+#| message: false
+#| warning: false
+#| results: asis
+
+mostrar_csv(
+  ruta = "data/AOI_area_inundada_anual_2015_2024.csv",
+  titulo = "**Tabla 1. Área inundada anual estimada para el periodo 2015--2024.**",
+  max_filas = 15,
+  max_columnas = 6
+)
+```
+
+### Área inundada mensual
+
+La tabla mensual contiene el detalle de la serie temporal. En el cuerpo del informe se presenta una vista parcial para no saturar el PDF, pero el archivo completo permite revisar la estacionalidad de las detecciones.
+
+```{r}
+#| label: tabla-area-inundada-mensual
+#| echo: false
+#| eval: true
+#| message: false
+#| warning: false
+#| results: asis
+
+mostrar_csv(
+  ruta = "data/AOI_area_inundada_mensual_2015_2024.csv",
+  titulo = "**Tabla 2. Área inundada mensual. Vista parcial de la serie 2015--2024.**",
+  max_filas = 10,
+  max_columnas = 6
+)
+```
+
+### Área inundable recurrente
+
+Esta tabla resume el área que cumple el criterio de zona inundable recurrente, definido como píxeles con al menos dos meses de detección durante el periodo de análisis.
+
+```{r}
+#| label: tabla-area-recurrente
+#| echo: false
+#| eval: true
+#| message: false
+#| warning: false
+#| results: asis
+
+mostrar_csv(
+  ruta = "data/AOI_area_inundable_recurrente_2015_2024.csv",
+  titulo = "**Tabla 3. Área inundable recurrente para el periodo 2015--2024.**",
+  max_filas = 10,
+  max_columnas = 6
+)
+```
+
+### Área por clase de recurrencia
+
+Esta tabla complementa el mapa de recurrencia, porque permite cuantificar cuánta superficie quedó clasificada en cada nivel.
+
+```{r}
+#| label: tabla-area-clase-recurrencia
+#| echo: false
+#| eval: true
+#| message: false
+#| warning: false
+#| results: asis
+
+mostrar_csv(
+  ruta = "data/AOI_area_por_clase_recurrencia_2015_2024.csv",
+  titulo = "**Tabla 4. Área por clase de recurrencia de inundación.**",
+  max_filas = 10,
+  max_columnas = 6
+)
+```
+
+## Discusión integrada de mapas y tablas
+
+En conjunto, los resultados muestran que las posibles áreas inundadas no se distribuyen de forma homogénea en el Meta. La repetición de detecciones se concentra en sectores específicos, lo que sugiere una dinámica de este fenomeno corresponde a zonas planas, drenajes y zonas donde el agua superficial aparece de manera más recurrente.
+
+Las tablas ayudan a respaldar esa lectura cartográfica. La tabla anual permite comparar años; la mensual puede usarse para evaluar estacionalidad; la tabla por clase muestra cómo se reparte el área entre baja, media y alta recurrencia; y la tabla de zona recurrente resume el área que cumple el criterio mínimo definido en el script.
+
+Es posible que se generen falsos positivos o falsos negativos durante la ejecución del ejercicio. La vegetación inundada, la humedad del suelo, la rugosidad del agua, las sombras radar y la selección del umbral pueden afectar la detección. Por esta razón, los productos deben entenderse como un insumo exploratorio útil para orientar validación con información hidrometeorológica, registros históricos o cartografía oficial.
+
+# Conclusiones
+
+La frecuencia absoluta y la frecuencia relativa fueron los indicadores centrales del análisis. La primera permitió contar cuántas veces se detectó posible inundación en cada píxel, mientras que la segunda facilitó comparar esa recurrencia en términos porcentuales. La clasificación en baja, media y alta recurrencia ayudó a traducir esos valores en una lectura cartográfica más clara y útil para priorizar zonas de revisión.
+
+Google Earth Engine facilitó el procesamiento de una serie multitemporal amplia sin descargar inicialmente todos los datos. Sin embargo, el flujo depende de varios aspectos que deben manejarse con cuidado: la autenticación en GEE, las cuotas de procesamiento, la exportación a Google Drive, la configuración del entorno Python y la selección de parámetros como el umbral de retrodispersión o el método de composición mensual.
+
+
+La metodología puede ajustarse a otros periodos y zonas, en donde se pueden incorporar nuevos sensores o integrarse con variables de exposición y vulnerabilidad para avanzar hacia análisis más completos de amenaza o riesgo en un área especifica.
+
+# Referencias
+
+Amitrano, D., Di Martino, G., Iodice, A., Riccio, D., & Ruello, G. (2018). Unsupervised rapid flood mapping using Sentinel-1 GRD SAR images. *IEEE Transactions on Geoscience and Remote Sensing, 56*(6), 3290--3299. https://doi.org/10.1109/TGRS.2018.2797536
+
+Ávila Díaz, Á. J., Guerrero, F. C., Escobar, Y. C., & Justino, F. (2013). Análisis de aspectos que incrementan el riesgo de inundaciones en Colombia. *Revista Gestión y Ambiente, 16*(2), 3--14. http://www.scielo.org.co/scielo.php?pid=S1909-24742013000200014
+
+Bauer-Marschallinger, B., Freeman, V., Cao, S., Paulik, C., Schaufler, S., Stachl, T., Modanesi, S., Massari, C., Ciabatta, L., Brocca, L., & Wagner, W. (2019). Toward global soil moisture monitoring with Sentinel-1: Harnessing assets and overcoming obstacles. *IEEE Transactions on Geoscience and Remote Sensing, 57*(1), 520--539. https://doi.org/10.1109/TGRS.2018.2843866
+
+Cao, H., Zhang, H., Wang, C., & Zhang, B. (2019). Operational flood detection using Sentinel-1 SAR data over large areas. *Water, 11*(4), 786. https://doi.org/10.3390/w11040786
+
+Gorelick, N., Hancher, M., Dixon, M., Ilyushchenko, S., Thau, D., & Moore, R. (2017). Google Earth Engine: Planetary-scale geospatial analysis for everyone. *Remote Sensing of Environment, 202*, 18--27. https://doi.org/10.1016/j.rse.2017.06.031
+
+Landuyt, L., Van Wesemael, A., Schumann, G. J.-P., Hostache, R., Verhoest, N. E. C., & Van Coillie, F. M. B. (2019). Flood mapping based on synthetic aperture radar: An assessment of established approaches. *IEEE Transactions on Geoscience and Remote Sensing, 57*(2), 722--739. https://doi.org/10.1109/TGRS.2018.2860054
+
+Manjusree, P., Kumar, L. P., Bhatt, C. M., Rao, G. S., & Bhanumurthy, V. (2012). Optimization of threshold ranges for rapid flood inundation mapping by evaluating backscatter profiles of high incidence angle SAR images. *International Journal of Disaster Risk Science, 3*(2), 113--122. https://doi.org/10.1007/s13753-012-0010-z
+
+Martinez, J.-M., & Le Toan, T. (2007). Mapping of flood dynamics and spatial distribution of vegetation in the Amazon floodplain using multitemporal SAR data. *Remote Sensing of Environment, 108*(3), 209--223. https://doi.org/10.1016/j.rse.2006.11.012
+
+Martinis, S., Groth, S., Wieland, M., Knopp, L., & Rättich, M. (2022). Towards a global seasonal and permanent reference water product from Sentinel-1/2 data for improved flood mapping. *Remote Sensing of Environment, 278*, 113077. https://doi.org/10.1016/j.rse.2022.113077
+
+Mullissa, A., Vollrath, A., Odongo-Braun, C., Slagter, B., Balling, J., Gou, Y., Gorelick, N., & Reiche, J. (2021). Sentinel-1 SAR Backscatter Analysis Ready Data Preparation in Google Earth Engine. *Remote Sensing, 13*(10), 1954. https://doi.org/10.3390/rs13101954
+
+Pekel, J.-F., Cottam, A., Gorelick, N., & Belward, A. S. (2016). High-resolution mapping of global surface water and its long-term changes. *Nature, 540*(7633), 418--422. https://doi.org/10.1038/nature20584
+
+Schlaffer, S., Matgen, P., Hollaus, M., & Wagner, W. (2015). Flood detection from multi-temporal SAR data using harmonic analysis and change detection. *International Journal of Applied Earth Observation and Geoinformation, 38*, 15--24. https://doi.org/10.1016/j.jag.2014.12.001
+
+Tellman, B., Sullivan, J. A., Kuhn, C., Kettner, A. J., Doyle, C. S., Brakenridge, G. R., Erickson, T. A., & Slayback, D. A. (2021). Satellite imaging reveals increased proportion of population exposed to floods. *Nature, 596*(7870), 80--86. https://doi.org/10.1038/s41586-021-03695-w
+
+Twele, A., Cao, W., Plank, S., & Martinis, S. (2016). Sentinel-1-based flood mapping: A fully automated processing chain. *International Journal of Remote Sensing, 37*(13), 2990--3004. https://doi.org/10.1080/2150704X.2016.1192304
+
+# Anexos
+
+## Anexo A. Configuración del entorno computacional
+
+El proyecto se desarrolló principalmente con **Python** y **Google Earth Engine**. En el Quarto, los bloques de código se dejaron visibles pero no ejecutables durante el renderizado, con el fin de evitar errores asociados a autenticación, cuotas o tareas activas de Earth Engine. El procesamiento debe ejecutarse previamente desde Jupyter, VS Code o desde el script `.py` incluido en el repositorio.
+
+### Dependencias principales
+
+Las librerías principales utilizadas en el flujo de trabajo son:
+
+- `earthengine-api`
+- `geemap`
+- `geopandas`
+- `rasterio`
+- `pyproj`
+- `pandas`
+- `matplotlib`
+- `jupyter`
+
+Para recrear el entorno básico con `pip`, se puede ejecutar desde la carpeta del proyecto:
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+Si se prefiere instalar manualmente las dependencias principales, se puede usar:
+
+```bash
+python -m pip install earthengine-api geemap geopandas rasterio pyproj pandas matplotlib jupyter
+```
+
+### Alternativa con Conda
+
+El repositorio también incluye un archivo `environment.yml`. Con este archivo, el entorno puede crearse y activarse así:
+
+```bash
+conda env create -f environment.yml
+conda activate proyecto-inundaciones-meta
+```
+
+### Autenticación en Google Earth Engine
+
+Antes de ejecutar el procesamiento, es necesario autenticar la cuenta de Google Earth Engine:
+
+```bash
+earthengine authenticate
+```
+
+Después de la autenticación, la inicialización desde Python se realiza con:
+
+```python
+import ee
+ee.Initialize(project="ee-juatorreslo")
+```
+
+### Observación sobre Docker y virtualización alternativa
+
+No fue necesario modificar un contenedor Docker de clase. En su lugar, se documentó una alternativa reproducible mediante `requirements.txt` y `environment.yml`. Esta decisión se tomó porque el procesamiento principal depende de Google Earth Engine, autenticación externa y exportaciones a Google Drive. Con estos archivos, otro usuario puede recrear el entorno de análisis en una instalación local o en Conda, sin depender de una imagen Docker personalizada.
